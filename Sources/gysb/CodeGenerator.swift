@@ -43,6 +43,7 @@ class CodeGenerator : ASTVisitor {
         var s = text
         s = s.replacingOccurrences(of: "\\", with: "\\\\")
         s = s.replacingOccurrences(of: "\"", with: "\\\"")
+        s = s.replacingOccurrences(of: "\t", with: "\\t")
         s = s.replacingOccurrences(of: "\n", with: "\\n")
         s = s.replacingOccurrences(of: "\r", with: "\\r")
         return s

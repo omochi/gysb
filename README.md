@@ -7,7 +7,7 @@ Swift implementation of [swift/gyb](https://github.com/apple/swift/blob/master/u
 # example
 
 ```
-$ cat Resources/a.txt.gysb 
+$ cat Examples/a.txt.gysb 
 Hello 100%%
 %{
     let y = 10

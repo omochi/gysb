@@ -1,0 +1,6 @@
+% for n in 2...4 {
+struct Vector${n} {
+    
+}
+
+% }

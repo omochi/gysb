@@ -11,10 +11,11 @@ class Parser {
         var lineEnd: Bool
     }
     
-    func run(source: String) throws -> Template {
-        self.source = source
-        self._index = source.startIndex
-        
+    init(source: String) {
+        tokenReader = TokenReader(source: source)
+    }
+    
+    func parse() throws -> Template {
         var children = [AnyASTNode]()
         while let nodes = try parseLine() {
             nodes.forEach { node in
@@ -34,19 +35,19 @@ class Parser {
         var firstLoop = true
 
         while true {
-            let index = self.index
-            let token = readToken()
+            let pos = tokenReader.position
+            let token = tokenReader.read()
             
             switch token {
             case .char, .newline, .white, .leftBrace, .rightBrace:
-                seekIndex(index)
+                tokenReader.seekTo(position: pos)
                 let textRet = try parseText()
                 ret.append(AnyASTNode(textRet.text))
                 if textRet.lineEnd {
                     return ret
                 }
             case .codeOpen:
-                seekIndex(index)
+                tokenReader.seekTo(position: pos)
                 let code = try parseCodeBlock()
                 ret.append(AnyASTNode(code))
                 return ret
@@ -55,7 +56,7 @@ class Parser {
             case .codeLine:
                 throw Error(message: "invalid codeLine here")
             case .substOpen:
-                seekIndex(index)
+                tokenReader.seekTo(position: pos)
                 let subst = try parseSubst()
                 ret.append(AnyASTNode(subst))
             case .end:
@@ -78,8 +79,8 @@ class Parser {
             var firstLoop = true
 
             while true {
-                let index = self.index
-                let token = readToken()
+                let pos = tokenReader.position
+                let token = tokenReader.read()
 
                 switch token {
                 case .char, .leftBrace, .rightBrace, .white:
@@ -89,7 +90,7 @@ class Parser {
                     lineEnd = true
                     return
                 case .codeOpen, .codeClose, .codeLine, .substOpen:
-                    seekIndex(index)
+                    tokenReader.seekTo(position: pos)
                     return
                 case .end:
                     if firstLoop {
@@ -111,14 +112,14 @@ class Parser {
     private func parseCodeBlock() throws -> CodeNode {
         var code: String = ""
 
-        let openToken = readToken()
+        let openToken = tokenReader.read()
         guard openToken == .codeOpen else
         {
             throw Error(message: "no codeOpen")
         }
 
         while true {
-            let token = readToken()
+            let token = tokenReader.read()
 
             switch token {
             case .char, .newline, .white,
@@ -138,15 +139,15 @@ class Parser {
     private func eatWhiteLead() -> String {
         var ret = ""
         while true {
-            let index = self.index
-            let token = readToken()
+            let pos = tokenReader.position
+            let token = tokenReader.read()
 
             switch token {
             case .white:
                 ret.append(token.description)
                 break
             default:
-                seekIndex(index)
+                tokenReader.seekTo(position: pos)
                 return ret
             }
         }
@@ -156,8 +157,8 @@ class Parser {
     private func eatWhiteAndNewlineTail() -> String {
         var ret = ""
         while true {
-            let index = self.index
-            let token = readToken()
+            let pos = tokenReader.position
+            let token = tokenReader.read()
 
             switch token {
             case .white:
@@ -167,23 +168,23 @@ class Parser {
                 ret.append(token.description)
                 return ret
             default:
-                seekIndex(index)
+                tokenReader.seekTo(position: pos)
                 return ret
             }
         }
     }
 
     private func mayParseCodeLine() throws -> CodeNode? {
-        let index = self.index
+        let pos = tokenReader.position
 
         eatWhiteLead()
 
-        let token = readToken()
+        let token = tokenReader.read()
         if token == .codeLine {
-            seekIndex(index)
+            tokenReader.seekTo(position: pos)
             return try parseCodeLine()
         } else {
-            seekIndex(index)
+            tokenReader.seekTo(position: pos)
             return nil
         }
     }
@@ -193,13 +194,13 @@ class Parser {
         var code: String = ""
 
         code.append(eatWhiteLead())
-        let openToken = readToken()
+        let openToken = tokenReader.read()
         guard openToken == .codeLine else {
             throw Error(message: "no codeLine")
         }
 
         while true {
-            let token = readToken()
+            let token = tokenReader.read()
 
             switch token {
             case .char, .white,
@@ -216,7 +217,7 @@ class Parser {
     private func parseSubst() throws -> SubstNode {
         var code: String = ""
 
-        let openToken = readToken()
+        let openToken = tokenReader.read()
         guard openToken == .substOpen else {
             throw Error(message: "no substOpen")
         }
@@ -224,7 +225,7 @@ class Parser {
         var braceDepth: Int = 0
         
         while true {
-            let token = readToken()
+            let token = tokenReader.read()
             
             switch token {
             case .char, .newline, .white, .codeOpen, .codeClose, .codeLine,
@@ -246,78 +247,5 @@ class Parser {
         }
     }
 
-
-    private func readToken() -> Token {
-        guard let ch = source.getOrNone(index) else {
-            return .end
-        }
-        advanceIndex()
-
-        switch ch {
-        case Character("\r"):
-            switch source.getOrNone(index) {
-            case .some(Character("\n")):
-                advanceIndex()
-                return .newline("\r\n")
-            default:
-                return .newline("\r")
-            }
-        case Character("\n"):
-            return .newline("\n")
-        case Character(" "):
-            return .white(" ")
-        case Character("\t"):
-            return .white("\t")
-        case Character("%"):
-            switch source.getOrNone(index) {
-            case .some(Character("%")):
-                // escaped
-                advanceIndex()
-                return .char("%")
-            case .some(Character("{")):
-                advanceIndex()
-                return .codeOpen
-            default:
-                return .codeLine
-            }
-        case Character("$"):
-            switch source.getOrNone(index) {
-            case .some(Character("$")):
-                // escaped
-                advanceIndex()
-                return .char("$")
-            case .some(Character("{")):
-                advanceIndex()
-                return .substOpen
-            default:
-                return .char("$")
-            }
-        case Character("{"):
-            return .leftBrace
-        case Character("}"):
-            switch source.getOrNone(index) {
-            case .some(Character("%")):
-                advanceIndex()
-                return .codeClose
-            default:
-                return .rightBrace
-            }
-        default:
-            return .char(String(ch))
-        }
-    }
-
-    private func seekIndex(_ index: String.Index) {
-        self._index = index
-    }
-
-    private func advanceIndex() {
-        self._index = source.index(after: index)
-    }
-    
-    private var source: String!
-    private var index: String.Index {
-        return _index!
-    }
-    private var _index: String.Index?
+    private let tokenReader: TokenReader
 }

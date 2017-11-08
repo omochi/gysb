@@ -15,10 +15,10 @@ class Compiler {
     }
     
     func compile(source: String) throws -> String {
-        let parser = Parser()
-        let template = try parser.run(source: source)
+        let parser = Parser(source: source)
+        let template = try parser.parse()
 
-//        template.print()
+        template.print()
         
         let generator = CodeGenerator()
         let code = generator.run(template: template)

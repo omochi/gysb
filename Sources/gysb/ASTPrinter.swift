@@ -7,19 +7,19 @@
 
 class ASTPrinter : ASTVisitor {
     func visit(nop: NopNode) {
-        write("Nop")
+        write(nop.description)
     }
     
     func visit(text: TextNode) {
-        write("Text(\(text.text))")
+        write(text.description)
     }
     
     func visit(code: CodeNode) {
-        write("Code(\(code.code))")
+        write(code.description)
     }
     
     func visit(subst: SubstNode) {
-        write("Subst(\(subst.code))")
+        write(subst.description)
     }
     
     func visit(template: Template) {

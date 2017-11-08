@@ -23,39 +23,33 @@ class CodeGenerator : ASTVisitor {
     }
     
     func visit(nop: NopNode) {
-        code.append("// nop\n")
+        emit("// nop\n")
     }
     
     func visit(text: TextNode) {
-        let literalCode = "\"" + escape(text: text.text) + "\""
-        code.append("write(\(literalCode))\n")
+        let literalCode = "\"" + escapeToSwiftLiteral(text: text.text) + "\""
+        emit("write(\(literalCode))\n")
     }
     
     func visit(code codeNode: CodeNode) {
-        code.append(codeNode.code)
+        emit(codeNode.code)
     }
     
     func visit(subst: SubstNode) {
-        code.append("write(String(describing: \(subst.code)))\n")
-    }
-    
-    private func escape(text: String) -> String {
-        var s = text
-        s = s.replacingOccurrences(of: "\\", with: "\\\\")
-        s = s.replacingOccurrences(of: "\"", with: "\\\"")
-        s = s.replacingOccurrences(of: "\t", with: "\\t")
-        s = s.replacingOccurrences(of: "\n", with: "\\n")
-        s = s.replacingOccurrences(of: "\r", with: "\\r")
-        return s
+        emit("write(String(describing: \(subst.code)))\n")
     }
     
     private func emitStdLib() {
-        code.append("""
+        emit("""
 func write(_ s: String) {
     print(s, terminator: "")
 }
 
 """)
+    }
+    
+    private func emit(_ code: String) {
+        self.code.append(code)
     }
     
     private var code: String = ""

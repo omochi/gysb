@@ -9,6 +9,12 @@ protocol ASTNode {
     func accept(visitor: ASTVisitor)
 }
 
+extension ASTNode {
+    func print() {
+        accept(visitor: ASTPrinter())
+    }
+}
+
 struct AnyASTNode : ASTNode {
     init<X: ASTNode>(_ base: X) {
         self.base = base

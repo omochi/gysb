@@ -145,9 +145,6 @@ class Parser {
             case .white:
                 ret.append(token.description)
                 break
-            case .newline, .end:
-                ret.append(token.description)
-                return ret
             default:
                 seekIndex(index)
                 return ret

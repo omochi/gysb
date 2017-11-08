@@ -18,10 +18,13 @@ class Compiler {
         let parser = Parser()
         let template = try parser.run(source: source)
 
-//        template.accept(visitor: ASTPrinter())
-
+//        template.print()
+        
         let generator = CodeGenerator()
         let code = generator.run(template: template)
+        
+//        print(code)
+        
         return code
     }
 }

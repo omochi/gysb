@@ -9,7 +9,6 @@ class CodeExecutor {
         try code.write(toFile: path, atomically: true, encoding: .utf8)
         try runSwift(path: path)
         try? FileManager.default.removeItem(atPath: path)
-        
     }
     
     func runSwift(path: String) throws {

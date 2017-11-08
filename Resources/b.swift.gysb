@@ -3,21 +3,21 @@
 }%
 
 % for intType in intTypes {
-%     for sign in ["", "U"] {
+    % for sign in ["", "U"] {
 
 /// Extension that adds a few additional functionalities to ${sign}Int${intType}
 extension ${sign}Int${intType} {
 
     /// Returns a ${sign}Int${intType} with all ones
-%         if sign == "" {
+        % if sign == "" {
     public static var allOnes: Int${intType} {
        return Int${intType}(bitPattern: UInt${intType}.max)
     }
-%         } else {
+        % } else {
     public static var allOnes: UInt${intType} {
        return UInt${intType}.max
     }
-%         }
+        % }
 }
-%     }
+    % }
 % }

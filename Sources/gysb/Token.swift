@@ -12,9 +12,13 @@ enum Token : Equatable, CustomStringConvertible {
     case codeOpen // %{
     case codeClose // }%
     case codeLine // %
+    case macroLine // %!
     case substOpen // ${
     case leftBrace // {
     case rightBrace // }
+    case leftParen // (
+    case rightParen // )
+    case doubleQuote // "
     case end
     
     var description: String {
@@ -31,12 +35,20 @@ enum Token : Equatable, CustomStringConvertible {
             return "}%"
         case .codeLine:
             return "%"
+        case .macroLine:
+            return "%!"
         case .substOpen:
             return "${"
         case .leftBrace:
             return "{"
         case .rightBrace:
             return "}"
+        case .leftParen:
+            return "("
+        case .rightParen:
+            return ")"
+        case .doubleQuote:
+            return "\""
         case .end:
             return ""
         }
@@ -54,9 +66,13 @@ func ==(_ a: Token, _ b: Token) -> Bool {
     case (.codeOpen, .codeOpen),
          (.codeClose, .codeClose),
          (.codeLine, .codeLine),
+         (.macroLine, .macroLine),
          (.substOpen, .substOpen),
          (.leftBrace, .leftBrace),
          (.rightBrace, .rightBrace),
+         (.leftParen, .leftParen),
+         (.rightParen, .rightParen),
+         (.doubleQuote, .doubleQuote),
          (.end, .end):
         return true
     default:

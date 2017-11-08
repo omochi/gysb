@@ -22,6 +22,20 @@ class ASTPrinter : ASTVisitor {
         write(subst.description)
     }
     
+    func visit(macroCall: MacroCallNode) {
+        write("MacroCall: \(macroCall.name) {")
+        indent += 1
+        macroCall.args.forEach { arg in
+            arg.accept(visitor: self)
+        }
+        indent -= 1
+        write("}")
+    }
+    
+    func visit(macroStringLiteral: MacroStringLiteralNode) {
+        write(macroStringLiteral.description)
+    }
+    
     func visit(template: Template) {
         write("Template {")
         indent += 1

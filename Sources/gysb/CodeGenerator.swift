@@ -39,6 +39,14 @@ class CodeGenerator : ASTVisitor {
         emit("write(String(describing: \(subst.code)))\n")
     }
     
+    func visit(macroCall: MacroCallNode) {
+//        print(macroCall)
+    }
+    
+    func visit(macroStringLiteral: MacroStringLiteralNode) {
+//        print(macroStringLiteral)
+    }
+    
     private func emitStdLib() {
         emit("""
 func write(_ s: String) {

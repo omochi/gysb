@@ -25,68 +25,90 @@ class TokenReader {
         self.index = position.index
     }
     
-    func advance() {
-        index = source.index(after: index)
-    }
-
     func read() -> Token {
-        guard let ch = source.getOrNone(index) else {
+        guard let ch = readChar() else {
             return .end
         }
-        advance()
         
         switch ch {
-        case Character("\r"):
-            switch source.getOrNone(index) {
-            case .some(Character("\n")):
-                advance()
+        case "\r":
+            let index = self.index
+            switch readChar() {
+            case .some("\n"):
                 return .newline("\r\n")
             default:
+                self.index = index
                 return .newline("\r")
             }
-        case Character("\n"):
+        case "\n":
             return .newline("\n")
-        case Character(" "):
+        case " ":
             return .white(" ")
-        case Character("\t"):
+        case "\t":
             return .white("\t")
-        case Character("%"):
-            switch source.getOrNone(index) {
-            case .some(Character("%")):
+        case "%":
+            let index = self.index
+            switch readChar() {
+            case .some("%"):
                 // escaped
-                advance()
                 return .char("%")
-            case .some(Character("{")):
-                advance()
+            case .some("{"):
                 return .codeOpen
+            case .some("!"):
+                return .macroLine
             default:
+                self.index = index
                 return .codeLine
             }
-        case Character("$"):
-            switch source.getOrNone(index) {
-            case .some(Character("$")):
+        case "$":
+            let index = self.index
+            switch readChar() {
+            case .some("$"):
                 // escaped
-                advance()
                 return .char("$")
-            case .some(Character("{")):
-                advance()
+            case .some("{"):
                 return .substOpen
             default:
+                self.index = index
                 return .char("$")
             }
-        case Character("{"):
+        case "{":
             return .leftBrace
-        case Character("}"):
-            switch source.getOrNone(index) {
-            case .some(Character("%")):
-                advance()
+        case "}":
+            let index = self.index
+            switch readChar() {
+            case .some("%"):
                 return .codeClose
             default:
+                self.index = index
                 return .rightBrace
             }
+        case "(":
+            return .leftParen
+        case ")":
+            return .rightParen
+        case "\"":
+            return .doubleQuote
         default:
-            return .char(String(ch))
+            return .char(ch)
         }
+    }
+    
+    func peek() -> Token {
+        let pos = self.position
+        let ret = read()
+        seekTo(position: pos)
+        return ret
+    }
+    
+    private func readChar() -> String? {
+        let index = self.index
+        if index == source.endIndex {
+            return nil
+        }
+        let char = String(source[index])
+        self.index = source.index(after: index)
+        return char
     }
     
     private var source: String

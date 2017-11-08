@@ -18,7 +18,7 @@ class Compiler {
         let parser = Parser(source: source)
         let template = try parser.parse()
 
-        template.print()
+//        template.print()
         
         let generator = CodeGenerator()
         let code = generator.run(template: template)

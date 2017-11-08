@@ -29,6 +29,10 @@ class Parser {
         if let codeLine = try mayParseCodeLine() {
             return [AnyASTNode(codeLine)]
         }
+        
+        if let macroLine = try mayParseMacroLine() {
+            return [AnyASTNode(macroLine)]
+        }
 
         var ret = [AnyASTNode]()
 
@@ -39,7 +43,9 @@ class Parser {
             let token = tokenReader.read()
             
             switch token {
-            case .char, .newline, .white, .leftBrace, .rightBrace:
+            case .char, .newline, .white,
+                 .leftBrace, .rightBrace, .leftParen, .rightParen,
+                 .doubleQuote:
                 tokenReader.seekTo(position: pos)
                 let textRet = try parseText()
                 ret.append(AnyASTNode(textRet.text))
@@ -55,6 +61,8 @@ class Parser {
                 throw Error(message: "invalid codeClose here")
             case .codeLine:
                 throw Error(message: "invalid codeLine here")
+            case .macroLine:
+                throw Error(message: "invalid macroLine here")
             case .substOpen:
                 tokenReader.seekTo(position: pos)
                 let subst = try parseSubst()
@@ -83,13 +91,15 @@ class Parser {
                 let token = tokenReader.read()
 
                 switch token {
-                case .char, .leftBrace, .rightBrace, .white:
+                case .char, .white,
+                     .leftBrace, .rightBrace, .leftParen, .rightParen,
+                     .doubleQuote:
                     text.append(token.description)
                 case .newline:
                     text.append(token.description)
                     lineEnd = true
                     return
-                case .codeOpen, .codeClose, .codeLine, .substOpen:
+                case .codeOpen, .codeClose, .codeLine, .macroLine, .substOpen:
                     tokenReader.seekTo(position: pos)
                     return
                 case .end:
@@ -122,15 +132,13 @@ class Parser {
             let token = tokenReader.read()
 
             switch token {
-            case .char, .newline, .white,
-                 .codeOpen, .codeLine,
-                 .substOpen, .leftBrace, .rightBrace:
-                code.append(token.description)
             case .codeClose:
                 eatWhiteAndNewlineTail()
                 return CodeNode(code: code)
             case .end:
-                throw Error(message: "")
+                throw Error(message: "no codeClose")
+            default:
+                code.append(token.description)
             }
         }
     }
@@ -180,16 +188,30 @@ class Parser {
         eatWhiteLead()
 
         let token = tokenReader.read()
+        tokenReader.seekTo(position: pos)
+        
         if token == .codeLine {
-            tokenReader.seekTo(position: pos)
             return try parseCodeLine()
         } else {
-            tokenReader.seekTo(position: pos)
+            return nil
+        }
+    }
+    
+    private func mayParseMacroLine() throws -> MacroCallNode? {
+        let pos = tokenReader.position
+        
+        eatWhiteLead()
+        
+        let token = tokenReader.read()
+        tokenReader.seekTo(position: pos)
+        
+        if token == .macroLine {
+            return try parseMacroLine()
+        } else {
             return nil
         }
     }
 
-    // TODO: eat leading white
     private func parseCodeLine() throws -> CodeNode {
         var code: String = ""
 
@@ -203,15 +225,18 @@ class Parser {
             let token = tokenReader.read()
 
             switch token {
-            case .char, .white,
-                 .codeOpen, .codeClose, .codeLine,
-                 .substOpen, .leftBrace, .rightBrace:
-                code.append(token.description)
             case .newline, .end:
                 code.append(token.description)
                 return CodeNode(code: code)
+            default:
+                code.append(token.description)
             }
         }
+    }
+    
+    private func parseMacroLine() throws -> MacroCallNode {
+        let macroParser = MacroParser(tokenReader: tokenReader)
+        return try macroParser.parse()
     }
     
     private func parseSubst() throws -> SubstNode {
@@ -228,9 +253,6 @@ class Parser {
             let token = tokenReader.read()
             
             switch token {
-            case .char, .newline, .white, .codeOpen, .codeClose, .codeLine,
-                 .substOpen:
-                code.append(token.description)
             case .leftBrace:
                 code.append(token.description)
                 braceDepth += 1
@@ -243,6 +265,8 @@ class Parser {
                 }
             case .end:
                 throw Error(message: "no substClose")
+            default:
+                code.append(token.description)
             }
         }
     }

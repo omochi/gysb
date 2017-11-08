@@ -77,6 +77,31 @@ struct SubstNode: ASTNode {
     }
 }
 
+struct MacroCallNode: ASTNode {
+    var name: String
+    var args: [AnyASTNode]
+    
+    func accept(visitor: ASTVisitor) {
+        visitor.visit(macroCall: self)
+    }
+    
+    var description: String {
+        return "MacroCall(\(name))"
+    }
+}
+
+struct MacroStringLiteralNode: ASTNode {
+    var string: String
+    
+    func accept(visitor: ASTVisitor) {
+        visitor.visit(macroStringLiteral: self)
+    }
+    
+    var description: String {
+        return "MacroStringLiteral(\(escapeToSwiftLiteral(text: string)))"
+    }
+}
+
 struct Template : ASTNode {
     var children: [AnyASTNode] = []
     

@@ -8,24 +8,12 @@
 import GysbBase
 
 protocol ASTNode : CustomStringConvertible {
-    func acceptOrThrow<V: ASTThrowableVisitor>(visitor: V) throws -> V.VisitResult
-    
-    func accept<V: ASTVisitor>(visitor: V) -> V.VisitResult
-    
     var switcher: ASTNodeSwitcher { get }
 }
 
 extension ASTNode {
-    func accept<V: ASTVisitor>(visitor: V) -> V.VisitResult {
-        return try! acceptOrThrow(visitor: visitor)
-    }
-}
-
-extension ASTNode {
     func print() -> String {
-        let p = ASTPrinter()
-        accept(visitor: p)
-        return p.output
+        return ASTPrinter(node: AnyASTNode(self)).print()
     }
 }
 
@@ -41,10 +29,6 @@ enum ASTNodeSwitcher {
 struct AnyASTNode : ASTNode {
     init<X: ASTNode>(_ base: X) {
         self.base = base
-    }
-    
-    func acceptOrThrow<V: ASTThrowableVisitor>(visitor: V) throws -> V.VisitResult {
-        return try base.acceptOrThrow(visitor: visitor)
     }
     
     var switcher: ASTNodeSwitcher {
@@ -63,10 +47,6 @@ struct AnyASTNode : ASTNode {
 }
 
 struct NopNode : ASTNode {
-    func acceptOrThrow<V: ASTThrowableVisitor>(visitor: V) throws -> V.VisitResult {
-        return try visitor.visit(nop: self)
-    }
-    
     var switcher: ASTNodeSwitcher {
         return .nop(self)
     }
@@ -78,10 +58,6 @@ struct NopNode : ASTNode {
 
 struct TextNode : ASTNode {
     var text: String
-    
-    func acceptOrThrow<V: ASTThrowableVisitor>(visitor: V) throws -> V.VisitResult {
-        return try visitor.visit(text: self)
-    }
     
     var switcher: ASTNodeSwitcher {
         return .text(self)
@@ -95,10 +71,6 @@ struct TextNode : ASTNode {
 struct CodeNode : ASTNode {
     var code: String
     
-    func acceptOrThrow<V: ASTThrowableVisitor>(visitor: V) throws -> V.VisitResult {
-        return try visitor.visit(code: self)
-    }
-    
     var switcher: ASTNodeSwitcher {
         return .code(self)
     }
@@ -110,10 +82,6 @@ struct CodeNode : ASTNode {
 
 struct SubstNode: ASTNode {
     var code: String
-    
-    func acceptOrThrow<V: ASTThrowableVisitor>(visitor: V) throws -> V.VisitResult {
-        return try visitor.visit(subst: self)
-    }
     
     var switcher: ASTNodeSwitcher {
         return .subst(self)
@@ -127,10 +95,6 @@ struct SubstNode: ASTNode {
 struct MacroNode: ASTNode {
     var code: String
     
-    func acceptOrThrow<V: ASTThrowableVisitor>(visitor: V) throws -> V.VisitResult {
-        return try visitor.visit(macro: self)
-    }
-    
     var switcher: ASTNodeSwitcher {
         return .macro(self)
     }
@@ -142,10 +106,6 @@ struct MacroNode: ASTNode {
 
 struct Template : ASTNode {
     var children: [AnyASTNode] = []
-    
-    func acceptOrThrow<V: ASTThrowableVisitor>(visitor: V) throws -> V.VisitResult {
-        return try visitor.visit(template: self)
-    }
     
     var switcher: ASTNodeSwitcher {
         return .template(self)

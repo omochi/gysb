@@ -20,7 +20,7 @@ class TemplateCodeGenerator {
         process(template)
     }
     
-    private func process(_ node: ASTNode) {
+    private func process<X: ASTNode>(_ node: X) {
         switch node.switcher {
         case .text(let text):
             let literalCode = "\"" + escapeToSwiftLiteral(text: text.text) + "\""

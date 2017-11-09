@@ -83,12 +83,6 @@ class TokenReader {
                 self.index = index
                 return .rightBrace
             }
-        case "(":
-            return .leftParen
-        case ")":
-            return .rightParen
-        case "\"":
-            return .doubleQuote
         default:
             return .char(ch)
         }

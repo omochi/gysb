@@ -5,43 +5,46 @@
 //  Created by omochimetaru on 2017/11/07.
 //
 
-class ASTPrinter : ASTVisitor {
-    func visit(nop: NopNode) {
-        write(nop.description)
+class ASTPrinter {
+    init(node: AnyASTNode) {
+        self.node = node
     }
     
-    func visit(text: TextNode) {
-        write(text.description)
+    func print() -> String {
+        process(node)
+        return output
     }
     
-    func visit(code: CodeNode) {
-        write(code.description)
-    }
-    
-    func visit(subst: SubstNode) {
-        write(subst.description)
-    }
-    
-    func visit(macro: MacroNode) throws -> () {
-        write(macro.description)
-    }    
-    
-    func visit(template: Template) throws {
-        write("Template {")
-        indent += 1
-        template.children.forEach { child in
-            child.accept(visitor: self)
+    private func process<X: ASTNode>(_ node: X) {
+        switch node.switcher {
+        case .nop(let nop):
+            write(nop.description)
+        case .text(let text):
+            write(text.description)
+        case .code(let code):
+            write(code.description)
+        case .subst(let subst):
+            write(subst.description)
+        case .macro(let macro):
+            write(macro.description)
+        case .template(let template):
+            write("Template {")
+            indent += 1
+            template.children.forEach { child in
+                process(child)
+            }
+            indent -= 1
+            write("}")
         }
-        indent -= 1
-        write("}")
     }
     
-    func write(_ string: String) {
+    private func write(_ string: String) {
         output += String.init(repeating: "  ", count: indent)
         output += string
         output += "\n"
     }
     
-    var indent: Int = 0
-    var output: String = ""
+    private let node: AnyASTNode
+    private var indent: Int = 0
+    private var output: String = ""
 }

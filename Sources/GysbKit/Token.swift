@@ -5,7 +5,7 @@
 //  Created by omochimetaru on 2017/11/07.
 //
 
-enum Token : Equatable, CustomStringConvertible {
+enum Token : CustomStringConvertible {
     case char(String)
     case newline(String) // \r\n, \n, \r
     case white(String) // " ", \t
@@ -16,9 +16,6 @@ enum Token : Equatable, CustomStringConvertible {
     case substOpen // ${
     case leftBrace // {
     case rightBrace // }
-    case leftParen // (
-    case rightParen // )
-    case doubleQuote // "
     case end
     
     var description: String {
@@ -43,39 +40,9 @@ enum Token : Equatable, CustomStringConvertible {
             return "{"
         case .rightBrace:
             return "}"
-        case .leftParen:
-            return "("
-        case .rightParen:
-            return ")"
-        case .doubleQuote:
-            return "\""
         case .end:
             return ""
         }
     }
 }
 
-func ==(_ a: Token, _ b: Token) -> Bool {
-    switch (a, b) {
-    case let (.char(x), .char(y)):
-        return x == y
-    case let (.newline(x), .newline(y)):
-        return x == y
-    case let (.white(x), .white(y)):
-        return x == y
-    case (.codeOpen, .codeOpen),
-         (.codeClose, .codeClose),
-         (.codeLine, .codeLine),
-         (.macroLine, .macroLine),
-         (.substOpen, .substOpen),
-         (.leftBrace, .leftBrace),
-         (.rightBrace, .rightBrace),
-         (.leftParen, .leftParen),
-         (.rightParen, .rightParen),
-         (.doubleQuote, .doubleQuote),
-         (.end, .end):
-        return true
-    default:
-        return false
-    }
-}

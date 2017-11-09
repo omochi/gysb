@@ -32,42 +32,6 @@ class MacroProcessor {
         return self.template
     }
     
-//    func eval<X: ASTNode>(node: X) throws -> Any {
-//        switch node.switcher {
-//        case .macroCall(let x):
-//            return try evalMacroCall(x)
-//        case .macroStringLiteral(let x):
-//            return x.string
-//        default:
-//            throw Error(message: "can not eval this node: \(node)")
-//        }
-//    }
-//
-//    func evalMacroCall(_ call: MacroCallNode) throws -> Any {
-//        switch call.name {
-//        case "include_code":
-//            if call.args.count != 1 {
-//                throw Error(message: "macro arg num is wrong")
-//            }
-//            let path = try cast(eval(node: call.args[0]), to: String.self)
-//            return IncludeCodeResult(path: path)
-//        default:
-//            throw Error(message: "undefined macro: \(call.name)")
-//        }
-//    }
-    
-    func includeCode(path pattern: String) throws -> [CodeNode] {
-        var ret = [CodeNode]()
-        
-        let from = self.path.deletingLastPathComponent()
-
-        for path in glob(pattern: pattern, in: from.path) {
-            let code = try String.init(contentsOfFile: path, encoding: .utf8) + "\n"
-            ret.append(CodeNode(code: code))
-        }
-        return ret
-    }
-    
     private func joinMacroNodes() {
         var index = 0
         var newChildren = [AnyASTNode]()
@@ -143,6 +107,18 @@ class MacroProcessor {
             return ()
         }
         try interpreter.run()
+        return ret
+    }
+    
+    private func includeCode(path pattern: String) throws -> [CodeNode] {
+        var ret = [CodeNode]()
+        
+        let from = self.path.deletingLastPathComponent()
+        
+        for path in glob(pattern: pattern, in: from.path) {
+            let code = try String.init(contentsOfFile: path, encoding: .utf8) + "\n"
+            ret.append(CodeNode(code: code))
+        }
         return ret
     }
     

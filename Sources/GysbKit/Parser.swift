@@ -46,8 +46,7 @@ class Parser {
             
             switch token {
             case .char, .newline, .white,
-                 .leftBrace, .rightBrace, .leftParen, .rightParen,
-                 .doubleQuote:
+                 .leftBrace, .rightBrace:
                 tokenReader.seekTo(position: pos)
                 let textRet = try parseText()
                 ret.append(AnyASTNode(textRet.text))
@@ -94,8 +93,7 @@ class Parser {
 
                 switch token {
                 case .char, .white,
-                     .leftBrace, .rightBrace, .leftParen, .rightParen,
-                     .doubleQuote:
+                     .leftBrace, .rightBrace:
                     text.append(token.description)
                 case .newline:
                     text.append(token.description)
@@ -125,8 +123,7 @@ class Parser {
         var code: String = ""
 
         let openToken = tokenReader.read()
-        guard openToken == .codeOpen else
-        {
+        guard case .codeOpen = openToken else {
             throw Error(message: "no codeOpen")
         }
 
@@ -192,7 +189,7 @@ class Parser {
         let token = tokenReader.read()
         tokenReader.seekTo(position: pos)
         
-        if token == .codeLine {
+        if case .codeLine = token {
             return try parseCodeLine()
         } else {
             return nil
@@ -207,7 +204,7 @@ class Parser {
         let token = tokenReader.read()
         tokenReader.seekTo(position: pos)
         
-        if token == .macroLine {
+        if case .macroLine = token {
             return try parseMacroLine()
         } else {
             return nil
@@ -219,7 +216,7 @@ class Parser {
 
         code.append(eatWhiteLead())
         let openToken = tokenReader.read()
-        guard openToken == .codeLine else {
+        guard case .codeLine = openToken else {
             throw Error(message: "no codeLine")
         }
 
@@ -241,7 +238,7 @@ class Parser {
         
         code.append(eatWhiteLead())
         let openToken = tokenReader.read()
-        guard openToken == .macroLine else {
+        guard case .macroLine = openToken else {
             throw Error(message: "no macroLine")
         }
         
@@ -262,7 +259,7 @@ class Parser {
         var code: String = ""
 
         let openToken = tokenReader.read()
-        guard openToken == .substOpen else {
+        guard case .substOpen = openToken else {
             throw Error(message: "no substOpen")
         }
         

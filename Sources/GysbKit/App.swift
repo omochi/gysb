@@ -19,7 +19,7 @@ public class App {
     struct Option {
         var mode: Mode
         var writeOnSame: Bool = false
-        var paths: [String] = []
+        var paths: [URL] = []
         
         init(mode: Mode) {
             self.mode = mode
@@ -70,7 +70,7 @@ public class App {
         
         var mode: Mode? = nil
         var writeOnSame = false
-        var paths: [String] = []
+        var paths: [URL] = []
         
         while true {
             if index >= args.count {
@@ -118,16 +118,27 @@ public class App {
         }
         
         for arg in args[index...] {
-            let path = URL.init(fileURLWithPath: arg).path
+            let path = URL.init(fileURLWithPath: arg)
             paths.append(path)
         }
         
-        if paths.count >= 2 {
-            guard writeOnSame else {
-                throw Error(message: "if you specify multiple sources, need to specify `--write`")
+        switch mode! {
+        case .parse, .macro:
+            if paths.count >= 2 {
+                throw Error(message: "can not specify multiple sources with this mode")
             }
+        case .compile:
+            break
+        case .render:
+            if paths.count >= 2 {
+                guard writeOnSame else {
+                    throw Error(message: "if you specify multiple sources, need to specify `--write`")
+                }
+            }
+        case .help:
+            break
         }
-        
+    
         var option = Option(mode: mode!)
         option.writeOnSame = writeOnSame
         option.paths = paths

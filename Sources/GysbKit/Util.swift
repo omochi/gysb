@@ -39,3 +39,19 @@ func resolvePath(_ path: String, in directory: String) -> String {
     
     return URL.init(fileURLWithPath: directory).appendingPathComponent(path).relativePath
 }
+
+
+func getRandomString(length: Int) -> String {
+    let chars = [
+        "abcdefghijklmnopqrstuvwxyz",
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "0123456789"].joined()
+    
+    var ret = ""
+    for _ in 0..<length {
+        let dice = Int(arc4random_uniform(UInt32(chars.count)))
+        let charIndex = chars.index(chars.startIndex, offsetBy: dice)
+        ret.append(chars[charIndex])
+    }
+    return ret
+}

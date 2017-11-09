@@ -7,67 +7,62 @@
 
 import Foundation
 
-class CodeGenerator : ASTVisitor {
-    init(template: Template) {
-        self.template = template
+class CodeGenerator {
+    init(state: Driver.State) {
+        self.state = state
     }
     
     func generate() -> String {
-        code = ""
-        
-        emitStdLib()
-        
-        assertNotThrow("Generator never fails") {
-            template.accept(visitor: self)
-        }
-        
+        for i in 0..<state.entries.count {
+            emitTemplateRender(template: state.entries[i].template!, id: state.entries[i].codeID!)
+        }        
+        emitMain()
         return code
     }
     
-    func visit(template: Template) throws {
-        template.children.forEach { child in
-            child.accept(visitor: self)
-        }
-    }
-    
-    func visit(nop: NopNode) {
-        emit("// \(nop)\n")
-    }
-    
-    func visit(text: TextNode) {
-        let literalCode = "\"" + escapeToSwiftLiteral(text: text.text) + "\""
-        emit("write(\(literalCode))\n")
-    }
-    
-    func visit(code codeNode: CodeNode) {
-        emit(codeNode.code)
-    }
-    
-    func visit(subst: SubstNode) {
-        emit("write(String(describing: \(subst.code)))\n")
-    }
-    
-    func visit(macroCall: MacroCallNode) {
-        emit("// \(macroCall)\n")
-    }
-    
-    func visit(macroStringLiteral: MacroStringLiteralNode) {
-         emit("// \(macroStringLiteral)\n")
-    }
-    
-    private func emitStdLib() {
+    private func emitTemplateRender(template: Template, id: String) {
         emit("""
-func write(_ s: String) {
-    print(s, terminator: "")
-}
+            func gysb_\(id)_render() -> String {
+                var gysb_result: String = ""
+                func gysb_write(_ s: String) {
+                    gysb_result.append(s)
+                }
+            
+            """)
+        let generator = TemplateCodeGenerator(template: template, emit: self.emit)
+        generator.generate()
+        emit("""
 
-""")
+                return gysb_result
+            }
+
+            """)
+        emit("\n")
     }
     
-    private func emit(_ code: String) {
+    private func emitMain() {
+        emit("let gysb_main_result: String = {\n")
+        emit("    switch CommandLine.arguments[1] {\n\n")
+        for i in 0..<state.entries.count {
+            let id = state.entries[i].codeID!
+            emit("    case \"\(id)\":\n")
+            emit("        return gysb_\(id)_render()\n")
+            emit("\n")
+        }
+        emit("    default:\n")
+        emit("        fatalError(\"invalid id\")\n")
+        emit("    }\n")
+        emit("}()\n")
+        emit("\n")
+        emit("print(gysb_main_result, terminator: \"\")\n")
+    }
+    
+    func emit(_ code: String) {
         self.code.append(code)
     }
     
-    private let template: Template
+    
     private var code: String = ""
+    
+    private let state: Driver.State
 }

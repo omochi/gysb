@@ -16,7 +16,7 @@ class MacroExecutor : ASTThrowableVisitor {
     }
     
     init(template: Template,
-         path: String)
+         path: URL)
     {
         self.template = template
         self.path = path
@@ -96,7 +96,7 @@ class MacroExecutor : ASTThrowableVisitor {
     func includeCode(path pattern: String) throws -> [CodeNode] {
         var ret = [CodeNode]()
         
-        let from = URL.init(fileURLWithPath: self.path).deletingLastPathComponent()
+        let from = self.path.deletingLastPathComponent()
 
         for path in glob(pattern: pattern, in: from.path) {
             let code = try String.init(contentsOfFile: path, encoding: .utf8) + "\n"
@@ -106,5 +106,5 @@ class MacroExecutor : ASTThrowableVisitor {
     }
     
     private let template: Template
-    private let path: String
+    private let path: URL
 }

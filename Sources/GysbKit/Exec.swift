@@ -29,7 +29,8 @@ struct ExecError : Swift.Error, CustomStringConvertible {
     }
 }
 
-func execCapture(path: String,
+@discardableResult
+func execCapture(path: URL,
                  arguments: [String]) throws -> String
 {
     let stdoutPipe = Pipe()
@@ -45,7 +46,7 @@ func execCapture(path: String,
     }
     
     let process = Process()
-    process.launchPath = path
+    process.launchPath = path.path
     process.arguments = arguments
     process.standardOutput = stdoutPipe
     process.standardError = stderrPipe
@@ -64,7 +65,7 @@ func execCapture(path: String,
     }
     
     if process.terminationStatus != EXIT_SUCCESS {
-        throw ExecError(path: path,
+        throw ExecError(path: path.path,
                         arguments: arguments,
                         statusCode: process.terminationStatus,
                         stderr: stderrStr)
@@ -74,7 +75,8 @@ func execCapture(path: String,
 }
 
 func execWhich(name: String) throws -> String {
-    var path = try execCapture(path: "/usr/bin/which", arguments: [name])
+    var path = try execCapture(path: URL.init(fileURLWithPath: "/usr/bin/which"),
+                               arguments: [name])
     path = path.replacingOccurrences(of: "\\s+$", with: "", options: .regularExpression)
     return path
 }

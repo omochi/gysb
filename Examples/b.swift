@@ -1,5 +1,4 @@
 
-
 /// Extension that adds a few additional functionalities to Int8
 extension Int8 {
 

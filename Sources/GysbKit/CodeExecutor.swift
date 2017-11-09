@@ -1,57 +1,39 @@
 import Foundation
 
 class CodeExecutor {
-    init(code: String,
-         path: String)
+    init(state: Driver.State)
     {
-        self.code = code
-        self.path = path
+        self.state = state
     }
     
-    func execute() throws -> String {
-        let dir = NSTemporaryDirectory()
-        let file = getBaseName() + "_" + randomSuffix() + ".swift"
+    func deploy() throws {
+        let dir: URL = URL.init(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("gysb_" + getRandomString(length: 8))
         
-        let path = URL(fileURLWithPath: dir).appendingPathComponent(file).path
+        try FileManager.default.createDirectory(atPath: dir.path, withIntermediateDirectories: false)
+        state.executeDir = dir
         
-        try code.write(toFile: path, atomically: true, encoding: .utf8)
-        let result = try runSwift(path: path)
-        try? FileManager.default.removeItem(atPath: path)
-        return result
-    }
+        let path: URL = dir.appendingPathComponent("gysb.swift")
     
-    func runSwift(path: String) throws -> String {
-        let swiftPath = try execWhich(name: "swift")
-        return try execCapture(path: swiftPath, arguments: [path])
-    }
-    
-    private func getBaseName() -> String {
-        var name = URL(fileURLWithPath: path)
-        name = URL(fileURLWithPath: name.lastPathComponent)
-        while true {
-            if name.pathExtension.isEmpty {
-                break
-            }
-            name = name.deletingPathExtension()
-        }
-        return name.relativePath
-    }
-    
-    private func randomSuffix() -> String {
-        let chars = [
-            "abcdefghijklmnopqrstuvwxyz",
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-            "0123456789"].joined()
+        try state.code!.write(toFile: path.path, atomically: true, encoding: .utf8)
         
-        var ret = ""
-        for _ in 0..<8 {
-            let dice = Int(arc4random_uniform(UInt32(chars.count)))
-            let charIndex = chars.index(chars.startIndex, offsetBy: dice)
-            ret.append(chars[charIndex])
-        }
-        return ret
+        swiftcPath = URL.init(fileURLWithPath: try execWhich(name: "swiftc"))
+
+        try execCapture(path: swiftcPath, arguments:
+            ["-o",
+             dir.appendingPathComponent("gysb_exe").path,
+             path.path])
     }
     
-    private let code: String
-    private let path: String
+    func execute(id: String) throws -> String {
+        return try execCapture(path: state.executeDir!.appendingPathComponent("gysb_exe"),
+                               arguments: [id])
+    }
+    
+    func clear() {
+        try? FileManager.default.removeItem(at: state.executeDir!)
+    }
+    
+    private let state: Driver.State
+    private var swiftcPath: URL!
 }

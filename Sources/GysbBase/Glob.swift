@@ -7,7 +7,7 @@
 
 import Foundation
 
-func glob(pattern: String, in directory: String?) -> [String] {
+public func glob(pattern: String, in directory: String?) -> [String] {
     let fm = FileManager.default
     
     let ocd = fm.currentDirectoryPath

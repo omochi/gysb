@@ -7,6 +7,8 @@
 
 import Foundation
 
+import GysbBase
+
 class Driver {
     class State {
         struct Entry {
@@ -142,7 +144,7 @@ class Driver {
         for i in 0..<state.entries.count {
             let path = state.entries[i].path
             var template = state.entries[i].template!
-            template = try MacroExecutor.init(template: template, path: path).execute()
+            template = try MacroProcessor.init(template: template, path: path).execute()
             state.entries[i].template = template
         }
         if stage == .macro {

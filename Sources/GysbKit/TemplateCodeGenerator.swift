@@ -6,8 +6,9 @@
 //
 
 import Foundation
+import GysbBase
 
-class TemplateCodeGenerator : ASTVisitor {
+class TemplateCodeGenerator {
     typealias VisitResult = Void
     
     init(template: Template, emit: @escaping (String) -> Void) {
@@ -16,40 +17,29 @@ class TemplateCodeGenerator : ASTVisitor {
     }
     
     func generate() {
-        template.accept(visitor: self)
+        process(template)
     }
     
-    func visit(template: Template) throws {
-        template.children.forEach { child in
-            child.accept(visitor: self)
+    private func process(_ node: ASTNode) {
+        switch node.switcher {
+        case .text(let text):
+            let literalCode = "\"" + escapeToSwiftLiteral(text: text.text) + "\""
+            emit("gysb_write(\(literalCode))\n")
+        case .code(let code):
+            emit(code.code)
+        case .subst(let subst):
+            emit("gysb_write(String(describing: \(subst.code)))\n")
+        case .macro(let macro):
+            emit("// \(macro)\n")
+        case .nop(let nop):
+            emit("// \(nop)\n")
+        case .template(let template):
+            template.children.forEach { child in
+                process(child)
+            }
         }
     }
     
-    func visit(nop: NopNode) {
-        emit("// \(nop)\n")
-    }
-    
-    func visit(text: TextNode) {
-        let literalCode = "\"" + escapeToSwiftLiteral(text: text.text) + "\""
-        emit("gysb_write(\(literalCode))\n")
-    }
-    
-    func visit(code codeNode: CodeNode) {
-        emit(codeNode.code)
-    }
-    
-    func visit(subst: SubstNode) {
-        emit("gysb_write(String(describing: \(subst.code)))\n")
-    }
-    
-    func visit(macroCall: MacroCallNode) {
-        emit("// \(macroCall)\n")
-    }
-    
-    func visit(macroStringLiteral: MacroStringLiteralNode) {
-        emit("// \(macroStringLiteral)\n")
-    }
-   
     private func emit(_ code: String) {
         _emit("    " + code)
     }

@@ -5,6 +5,8 @@
 //  Created by omochimetaru on 2017/11/07.
 //
 
+import GysbBase
+
 class Parser {
     struct ParseTextResult {
         var text: TextNode
@@ -197,7 +199,7 @@ class Parser {
         }
     }
     
-    private func mayParseMacroLine() throws -> MacroCallNode? {
+    private func mayParseMacroLine() throws -> MacroNode? {
         let pos = tokenReader.position
         
         eatWhiteLead()
@@ -234,9 +236,26 @@ class Parser {
         }
     }
     
-    private func parseMacroLine() throws -> MacroCallNode {
-        let macroParser = MacroParser(tokenReader: tokenReader)
-        return try macroParser.parse()
+    private func parseMacroLine() throws -> MacroNode {
+        var code: String = ""
+        
+        code.append(eatWhiteLead())
+        let openToken = tokenReader.read()
+        guard openToken == .macroLine else {
+            throw Error(message: "no macroLine")
+        }
+        
+        while true {
+            let token = tokenReader.read()
+            
+            switch token {
+            case .newline, .end:
+                code.append(token.description)
+                return MacroNode(code: code)
+            default:
+                code.append(token.description)
+            }
+        }
     }
     
     private func parseSubst() throws -> SubstNode {

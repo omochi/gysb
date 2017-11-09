@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GysbBase
 
 public class App {
     enum Mode {

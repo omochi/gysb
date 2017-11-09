@@ -18,8 +18,13 @@ let package = Package(
     dependencies: [],
     targets: [
         .target(
+            name: "GysbBase"),
+        .target(
+            name: "GysbMacroLib",
+            dependencies: ["GysbBase"]),
+        .target(
             name: "GysbKit",
-            dependencies: []),
+            dependencies: ["GysbBase", "GysbMacroLib"]),
         .target(
             name: "gysb",
             dependencies: ["GysbKit"]),

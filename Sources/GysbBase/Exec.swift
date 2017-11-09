@@ -7,13 +7,13 @@
 
 import Foundation
 
-struct ExecError : Swift.Error, CustomStringConvertible {
-    var path: String
-    var arguments: [String]
-    var statusCode: Int32
-    var stderr: String
+public struct ExecError : Swift.Error, CustomStringConvertible {
+    public var path: String
+    public var arguments: [String]
+    public var statusCode: Int32
+    public var stderr: String
     
-    var description: String {
+    public var description: String {
         var ls = [
             "process execution failure",
             "path=[\(path)]"
@@ -30,7 +30,7 @@ struct ExecError : Swift.Error, CustomStringConvertible {
 }
 
 @discardableResult
-func execCapture(path: URL,
+public func execCapture(path: URL,
                  arguments: [String]) throws -> String
 {
     let stdoutPipe = Pipe()
@@ -74,7 +74,7 @@ func execCapture(path: URL,
     return stdoutStr
 }
 
-func execWhich(name: String) throws -> String {
+public func execWhich(name: String) throws -> String {
     var path = try execCapture(path: URL.init(fileURLWithPath: "/usr/bin/which"),
                                arguments: [name])
     path = path.replacingOccurrences(of: "\\s+$", with: "", options: .regularExpression)

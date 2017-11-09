@@ -5,6 +5,8 @@
 //  Created by omochimetaru on 2017/11/07.
 //
 
+import GysbBase
+
 protocol ASTNode : CustomStringConvertible {
     func acceptOrThrow<V: ASTThrowableVisitor>(visitor: V) throws -> V.VisitResult
     
@@ -32,8 +34,7 @@ enum ASTNodeSwitcher {
     case text(TextNode)
     case code(CodeNode)
     case subst(SubstNode)
-    case macroCall(MacroCallNode)
-    case macroStringLiteral(MacroStringLiteralNode)
+    case macro(MacroNode)
     case template(Template)
 }
 
@@ -123,36 +124,19 @@ struct SubstNode: ASTNode {
     }
 }
 
-struct MacroCallNode: ASTNode {
-    var name: String
-    var args: [AnyASTNode]
+struct MacroNode: ASTNode {
+    var code: String
     
     func acceptOrThrow<V: ASTThrowableVisitor>(visitor: V) throws -> V.VisitResult {
-        return try visitor.visit(macroCall: self)
+        return try visitor.visit(macro: self)
     }
     
     var switcher: ASTNodeSwitcher {
-        return .macroCall(self)
+        return .macro(self)
     }
     
     var description: String {
-        return "MacroCall(\(name))"
-    }
-}
-
-struct MacroStringLiteralNode: ASTNode {
-    var string: String
-    
-    func acceptOrThrow<V: ASTThrowableVisitor>(visitor: V) throws -> V.VisitResult {
-        return try visitor.visit(macroStringLiteral: self)
-    }
-    
-    var switcher: ASTNodeSwitcher {
-        return .macroStringLiteral(self)
-    }
-    
-    var description: String {
-        return "MacroStringLiteral(\(escapeToSwiftLiteral(text: string)))"
+        return "Macro(\(escapeToSwiftLiteral(text: code)))"
     }
 }
 

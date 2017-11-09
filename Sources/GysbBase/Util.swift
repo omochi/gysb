@@ -7,7 +7,7 @@
 
 import Foundation
 
-func escapeToSwiftLiteral(text: String) -> String {
+public func escapeToSwiftLiteral(text: String) -> String {
     var s = text
     s = s.replacingOccurrences(of: "\\", with: "\\\\")
     s = s.replacingOccurrences(of: "\"", with: "\\\"")
@@ -17,7 +17,7 @@ func escapeToSwiftLiteral(text: String) -> String {
     return s
 }
 
-func assertNotThrow<R>(_ reason: String, _ f: () throws -> R) -> R {
+public func assertNotThrow<R>(_ reason: String, _ f: () throws -> R) -> R {
     do {
         return try f()
     } catch let e {
@@ -25,14 +25,14 @@ func assertNotThrow<R>(_ reason: String, _ f: () throws -> R) -> R {
     }
 }
 
-func cast<T, U>(_ t: T, to: U.Type) throws -> U {
+public func cast<T, U>(_ t: T, to: U.Type) throws -> U {
     guard let u = t as? U else {
         throw Error(message: "cast failed: type=\(type(of: t)), to=\(U.self)")
     }
     return u
 }
 
-func resolvePath(_ path: String, in directory: String) -> String {
+public func resolvePath(_ path: String, in directory: String) -> String {
     if (path as NSString).isAbsolutePath {
         return path
     }
@@ -41,7 +41,7 @@ func resolvePath(_ path: String, in directory: String) -> String {
 }
 
 
-func getRandomString(length: Int) -> String {
+public func getRandomString(length: Int) -> String {
     let chars = [
         "abcdefghijklmnopqrstuvwxyz",
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ",

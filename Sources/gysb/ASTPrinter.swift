@@ -22,7 +22,7 @@ class ASTPrinter : ASTVisitor {
         write(subst.description)
     }
     
-    func visit(macroCall: MacroCallNode) {
+    func visit(macroCall: MacroCallNode) throws {
         write("MacroCall: \(macroCall.name) {")
         indent += 1
         macroCall.args.forEach { arg in
@@ -36,7 +36,7 @@ class ASTPrinter : ASTVisitor {
         write(macroStringLiteral.description)
     }
     
-    func visit(template: Template) {
+    func visit(template: Template) throws {
         write("Template {")
         indent += 1
         template.children.forEach { child in

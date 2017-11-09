@@ -16,3 +16,11 @@ func escapeToSwiftLiteral(text: String) -> String {
     s = s.replacingOccurrences(of: "\r", with: "\\r")
     return s
 }
+
+func assertNotThrow<R>(_ reason: String, _ f: () throws -> R) -> R {
+    do {
+        return try f()
+    } catch let e {
+        fatalError("assert failure(\(reason)): \(e)")
+    }
+}

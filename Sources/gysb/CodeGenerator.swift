@@ -16,18 +16,22 @@ class CodeGenerator : ASTVisitor {
         code = ""
         
         emitStdLib()
-        template.accept(visitor: self)
+        
+        assertNotThrow("Generator never fails") {
+            template.accept(visitor: self)
+        }
+        
         return code
     }
     
-    func visit(template: Template) {
+    func visit(template: Template) throws {
         template.children.forEach { child in
             child.accept(visitor: self)
         }
     }
     
     func visit(nop: NopNode) {
-        emit("// nop\n")
+        emit("// \(nop)\n")
     }
     
     func visit(text: TextNode) {
@@ -44,11 +48,11 @@ class CodeGenerator : ASTVisitor {
     }
     
     func visit(macroCall: MacroCallNode) {
-//        print(macroCall)
+        emit("// \(macroCall)\n")
     }
     
     func visit(macroStringLiteral: MacroStringLiteralNode) {
-//        print(macroStringLiteral)
+         emit("// \(macroStringLiteral)\n")
     }
     
     private func emitStdLib() {

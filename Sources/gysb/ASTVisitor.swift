@@ -5,23 +5,28 @@
 //  Created by omochimetaru on 2017/11/07.
 //
 
-protocol ASTVisitor {
+protocol ASTThrowableVisitor {
     associatedtype VisitResult
-    func visit(nop: NopNode) -> VisitResult
-    func visit(text: TextNode) -> VisitResult
-    func visit(code: CodeNode) -> VisitResult
-    func visit(subst: SubstNode) -> VisitResult
-    func visit(macroCall: MacroCallNode) -> VisitResult
-    func visit(macroStringLiteral: MacroStringLiteralNode) -> VisitResult
-    func visit(template: Template) -> VisitResult
+    func visit(nop: NopNode) throws -> VisitResult
+    func visit(text: TextNode) throws -> VisitResult
+    func visit(code: CodeNode) throws -> VisitResult
+    func visit(subst: SubstNode) throws -> VisitResult
+    func visit(macroCall: MacroCallNode) throws -> VisitResult
+    func visit(macroStringLiteral: MacroStringLiteralNode) throws -> VisitResult
+    func visit(template: Template) throws -> VisitResult
 }
 
-extension ASTVisitor where VisitResult == Void {
-    func visit(nop: NopNode) {}
-    func visit(text: TextNode) {}
-    func visit(code: CodeNode) {}
-    func visit(subst: SubstNode) {}
-    func visit(macroCall: MacroCallNode) {}
-    func visit(macroStringLiteral: MacroStringLiteralNode) {}
-    func visit(template: Template) {}
+extension ASTThrowableVisitor where VisitResult == Void {
+    func visit(nop: NopNode) throws {}
+    func visit(text: TextNode) throws {}
+    func visit(code: CodeNode) throws {}
+    func visit(subst: SubstNode) throws {}
+    func visit(macroCall: MacroCallNode) throws {}
+    func visit(macroStringLiteral: MacroStringLiteralNode) throws  {}
+    func visit(template: Template) throws {}
 }
+
+protocol ASTVisitor : ASTThrowableVisitor {
+}
+
+

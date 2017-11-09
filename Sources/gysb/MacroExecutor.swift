@@ -52,7 +52,7 @@ class MacroExecutor : ASTVisitor {
         return AnyASTNode(macroStringLiteral)
     }
     
-    func visit(template: Template) -> AnyASTNode {
+    func visit(template: Template) throws -> AnyASTNode {
         var newChildren = [AnyASTNode]()
         for child in template.children {
             let newChild = child.accept(visitor: self)

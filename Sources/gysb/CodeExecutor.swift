@@ -1,10 +1,16 @@
 import Foundation
 
 class CodeExecutor {
-    func execute(code: String,
-                 name: String) throws {
+    init(code: String,
+         path: String)
+    {
+        self.code = code
+        self.path = path
+    }
+    
+    func execute() throws {
         let dir = NSTemporaryDirectory()
-        let file = name + "_" + randomSuffix() + ".swift"
+        let file = getBaseName() + "_" + randomSuffix() + ".swift"
         let path = (dir as NSString).appendingPathComponent(file)
         try code.write(toFile: path, atomically: true, encoding: .utf8)
         try runSwift(path: path)
@@ -20,6 +26,17 @@ class CodeExecutor {
         if process.terminationStatus != EXIT_SUCCESS {
             throw Error(message: "swift compile error")
         }
+    }
+    
+    private func getBaseName() -> String {
+        var name: String = (path as NSString).lastPathComponent
+        while true {
+            if (name as NSString).pathExtension.isEmpty {
+                break
+            }
+            name = (name as NSString).deletingPathExtension
+        }
+        return name
     }
     
     private func getSwiftPath() throws -> String {
@@ -64,4 +81,7 @@ class CodeExecutor {
         }
         return ret
     }
+    
+    private let code: String
+    private let path: String
 }

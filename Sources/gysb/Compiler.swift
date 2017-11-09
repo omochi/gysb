@@ -8,19 +8,24 @@
 import Foundation
 
 // it compile template to swift code.
-class Compiler {    
-    func compile(file: String) throws -> String {
-        let source = try String.init(contentsOfFile: file, encoding: .utf8)
-        return try compile(source: source)
+class Compiler {
+    convenience init(path: String) throws {
+        let source = try String(contentsOfFile: path, encoding: .utf8)
+        self.init(source: source, path: path)
     }
     
-    func compile(source: String) throws -> String {
+    init(source: String, path: String) {
+        self.source = source
+        self.path = path
+    }
+    
+    func compile() throws -> String {
         let parser = Parser(source: source)
         var template = try parser.parse()
 
         template.print()
         
-        let macroExecutor = MacroExecutor(template: template)
+        let macroExecutor = MacroExecutor(template: template, path: path)
         template = try macroExecutor.execute()
         
         template.print()
@@ -32,4 +37,7 @@ class Compiler {
         
         return code
     }
+    
+    private let source: String
+    private let path: String
 }

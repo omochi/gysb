@@ -1,1 +1,1 @@
-%! include("aaa")
+%! include_code("lib.swift")

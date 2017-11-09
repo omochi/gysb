@@ -11,8 +11,11 @@ import Foundation
 class MacroExecutor : ASTThrowableVisitor {
     typealias VisitResult = AnyASTNode
     
-    init(template: Template) {
+    init(template: Template,
+         path: String)
+    {
         self.template = template
+        self.path = path
     }
     
     func execute() throws -> Template {
@@ -39,6 +42,7 @@ class MacroExecutor : ASTThrowableVisitor {
         switch macroCall.name {
         case "include_code":
             // todo
+            print("include_code")
             break
         default:
             throw Error(message: "undefined macro: \(macroCall.name)")
@@ -63,4 +67,5 @@ class MacroExecutor : ASTThrowableVisitor {
     
     
     private let template: Template
+    private let path: String
 }

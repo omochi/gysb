@@ -25,21 +25,12 @@ class App {
         }
         let inputFile = args[1]
         
-        let compiler = Compiler()
+        let compiler = try Compiler(path: inputFile)
         
-        let code = try compiler.compile(file: inputFile)
+        let code = try compiler.compile()
         
-        var name = (inputFile as NSString).lastPathComponent
-        while true {
-            if (name as NSString).pathExtension.isEmpty {
-                break
-            }
-            name = (name as NSString).deletingPathExtension
-        }
-        
-
-        let executor = CodeExecutor()
-        try executor.execute(code: code,
-                             name: name)
+        let executor = CodeExecutor(code: code,
+                                    path: inputFile)
+        try executor.execute()
     }
 }

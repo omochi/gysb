@@ -40,4 +40,51 @@ y is greater than seven!
 The End.
 ```
 
+# docs
+
+[紹介記事](https://qiita.com/omochimetaru/items/422ddd04e95c55dd3833)
+
+# command line help
+
+```
+$ swift run gysb --help
+Usage: .build/x86_64-apple-macosx10.10/debug/gysb [mode] path
+
+# mode
+    --help: print help
+    --parse: print AST
+    --macro: print macro evaluated AST
+    --compile: print compiled Swift
+    --render: render template
+```
+
+# syntax
+
+- `%%`: escaped `%`
+- `$$`: escaped `$`
+- `%{` code `%}`: code block
+- `% code`: code line
+- `${` code `}`: code substitution
+- `%!`: template macro invocation
+
+## macro
+
+include_code(path): include code here
+
+### example
+
+```
+[omochi@omochi-iMac gysb (master=)]$ cat Examples/include.swift.gysb 
+%! include_code("lib.swift")
+%
+aaa=${aaa()}
+[omochi@omochi-iMac gysb (master=)]$ cat Examples/lib.swift 
+func aaa() -> Int {
+	return 999
+}[omochi@omochi-iMac gysb (master=)]$ swift run gysb Examples/include.swift.gysb 
+aaa=999
+```
+
+
+
 

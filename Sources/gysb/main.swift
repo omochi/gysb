@@ -1,1 +1,2 @@
-App().main()
+import Foundation
+exit(App().main())

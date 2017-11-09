@@ -6,7 +6,7 @@
 //
 
 protocol ASTNode : CustomStringConvertible {
-    func accept(visitor: ASTVisitor)
+    func accept<V: ASTVisitor>(visitor: V) -> V.VisitResult
 }
 
 extension ASTNode {
@@ -20,20 +20,27 @@ struct AnyASTNode : ASTNode {
         self.base = base
     }
     
-    func accept(visitor: ASTVisitor) {
-        base.accept(visitor: visitor)
+    func accept<V: ASTVisitor>(visitor: V) -> V.VisitResult {
+        return base.accept(visitor: visitor)
     }
     
     var description: String {
         return base.description
     }
     
+    func downCast<T>(to: T.Type) throws -> T {
+        guard let t = base as? T else {
+            throw Error(message: "ASTNode downcast failed (type=\(type(of: base)), to=\(to))")
+        }
+        return t
+    }
+    
     private let base: ASTNode
 }
 
 struct NopNode : ASTNode {
-    func accept(visitor: ASTVisitor) {
-        visitor.visit(nop: self)
+    func accept<V: ASTVisitor>(visitor: V) -> V.VisitResult {
+        return visitor.visit(nop: self)
     }
     
     var description: String {
@@ -44,8 +51,8 @@ struct NopNode : ASTNode {
 struct TextNode : ASTNode {
     var text: String
     
-    func accept(visitor: ASTVisitor) {
-        visitor.visit(text: self)
+    func accept<V: ASTVisitor>(visitor: V) -> V.VisitResult {
+        return visitor.visit(text: self)
     }
     
     var description: String {
@@ -56,8 +63,8 @@ struct TextNode : ASTNode {
 struct CodeNode : ASTNode {
     var code: String
     
-    func accept(visitor: ASTVisitor) {
-        visitor.visit(code: self)
+    func accept<V: ASTVisitor>(visitor: V) -> V.VisitResult {
+        return visitor.visit(code: self)
     }
     
     var description: String {
@@ -68,8 +75,8 @@ struct CodeNode : ASTNode {
 struct SubstNode: ASTNode {
     var code: String
     
-    func accept(visitor: ASTVisitor) {
-        visitor.visit(subst: self)
+    func accept<V: ASTVisitor>(visitor: V) -> V.VisitResult {
+        return visitor.visit(subst: self)
     }
     
     var description: String {
@@ -81,8 +88,8 @@ struct MacroCallNode: ASTNode {
     var name: String
     var args: [AnyASTNode]
     
-    func accept(visitor: ASTVisitor) {
-        visitor.visit(macroCall: self)
+    func accept<V: ASTVisitor>(visitor: V) -> V.VisitResult {
+        return visitor.visit(macroCall: self)
     }
     
     var description: String {
@@ -93,8 +100,8 @@ struct MacroCallNode: ASTNode {
 struct MacroStringLiteralNode: ASTNode {
     var string: String
     
-    func accept(visitor: ASTVisitor) {
-        visitor.visit(macroStringLiteral: self)
+    func accept<V: ASTVisitor>(visitor: V) -> V.VisitResult {
+        return visitor.visit(macroStringLiteral: self)
     }
     
     var description: String {
@@ -105,8 +112,8 @@ struct MacroStringLiteralNode: ASTNode {
 struct Template : ASTNode {
     var children: [AnyASTNode] = []
     
-    func accept(visitor: ASTVisitor) {
-        visitor.visit(template: self)
+    func accept<V: ASTVisitor>(visitor: V) -> V.VisitResult {
+        return visitor.visit(template: self)
     }
     
     var description: String {

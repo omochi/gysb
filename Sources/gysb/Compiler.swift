@@ -16,12 +16,17 @@ class Compiler {
     
     func compile(source: String) throws -> String {
         let parser = Parser(source: source)
-        let template = try parser.parse()
+        var template = try parser.parse()
 
-//        template.print()
+        template.print()
         
-        let generator = CodeGenerator()
-        let code = generator.run(template: template)
+        let macroExecutor = MacroExecutor(template: template)
+        template = macroExecutor.execute()
+        
+        template.print()
+        
+        let generator = CodeGenerator(template: template)
+        let code = generator.generate()
         
 //        print(code)
         

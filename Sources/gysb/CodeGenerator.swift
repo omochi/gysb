@@ -8,7 +8,11 @@
 import Foundation
 
 class CodeGenerator : ASTVisitor {
-    func run(template: Template) -> String {
+    init(template: Template) {
+        self.template = template
+    }
+    
+    func generate() -> String {
         code = ""
         
         emitStdLib()
@@ -60,5 +64,6 @@ func write(_ s: String) {
         self.code.append(code)
     }
     
+    private let template: Template
     private var code: String = ""
 }

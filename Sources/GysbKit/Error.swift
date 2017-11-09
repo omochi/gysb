@@ -13,6 +13,6 @@ struct Error : Swift.Error, CustomStringConvertible {
     var message: String
     
     var description: String {
-        return "Error(\(message))"
+        return message
     }
 }

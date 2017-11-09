@@ -18,7 +18,12 @@ public class App {
     
     struct Option {
         var mode: Mode
-        var path: String?
+        var writeOnSame: Bool = false
+        var paths: [String] = []
+        
+        init(mode: Mode) {
+            self.mode = mode
+        }
     }
     
     public init() {}
@@ -48,7 +53,13 @@ public class App {
             return EXIT_SUCCESS
         }
         
-        let driver = Driver.init(path: option.path!)
+        let state = Driver.State()
+        state.writeOnSame = option.writeOnSame
+        for path in option.paths {
+            state.entries.append(.init(path: path))
+        }
+        
+        let driver = Driver.init(state: state)
         try driver.run(to: .init(appMode: option.mode))
         
         return EXIT_SUCCESS
@@ -57,62 +68,85 @@ public class App {
     private func parseCommandLine(args: [String]) throws -> Option {
         var index = 1
         
-        if index >= args.count {
-            throw Error(message: "invalid args")
-        }
-
-        let mode: Mode
-        var path: String? = nil
+        var mode: Mode? = nil
+        var writeOnSame = false
+        var paths: [String] = []
         
-        var arg = args[index]
-        index += 1
-        
-        switch arg {
-        case "--help":
-            mode = .help
-        case "--parse":
-            mode = .parse
-        case "--macro":
-            mode = .macro
-        case "--compile":
-            mode = .compile
-        case "--render":
-            mode = .render
-        default:
-            if arg.count > 2 && String(arg[..<arg.index(arg.startIndex, offsetBy: 2)]) == "--" {
-                throw Error(message: "unknown option: \(arg)")
-            }
-            
-            index -= 1
-            mode = .render
-        }
-        
-        switch mode {
-        case .help:
-            break
-        default:
+        while true {
             if index >= args.count {
-                throw Error(message: "path not specified")
+                throw Error(message: "no mode specified")
             }
-            arg = args[index]
+
+            let arg = args[index]
             index += 1
             
-            path = arg
+            switch arg {
+            case "--help":
+                mode = .help
+            case "--parse":
+                mode = .parse
+            case "--macro":
+                mode = .macro
+            case "--compile":
+                mode = .compile
+            case "--render":
+                mode = .render
+            case "--write":
+                writeOnSame = true
+            default:
+                if arg.count > 2 && String(arg[..<arg.index(arg.startIndex, offsetBy: 2)]) == "--" {
+                    throw Error(message: "unknown option: \(arg)")
+                }
+                
+                index -= 1
+                if mode == nil {
+                    mode = .render
+                }
+            }
+            
+            if mode != nil {
+                break
+            }
         }
         
-        return Option(mode: mode, path: path)
+        if mode == .help {
+            return Option(mode: .help)
+        }
+        
+        if index >= args.count {
+            throw Error(message: "path not specified")
+        }
+        
+        for arg in args[index...] {
+            let path = URL.init(fileURLWithPath: arg).path
+            paths.append(path)
+        }
+        
+        if paths.count >= 2 {
+            guard writeOnSame else {
+                throw Error(message: "if you specify multiple sources, need to specify `--write`")
+            }
+        }
+        
+        var option = Option(mode: mode!)
+        option.writeOnSame = writeOnSame
+        option.paths = paths
+        return option
     }
     
     private func printHelp() {
         let text = """
-        Usage: \(CommandLine.arguments[0]) [mode] path
+        Usage: \(CommandLine.arguments[0]) [mode] [flags] paths...
         
         # mode
             --help: print help
             --parse: print AST
             --macro: print macro evaluated AST
             --compile: print compiled Swift
-            --render: render template
+            --render: render template (default)
+        
+        # flags
+            --write: write output on same directory (extension removed)
         """
         print(text)
     }

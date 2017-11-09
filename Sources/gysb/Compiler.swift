@@ -21,7 +21,7 @@ class Compiler {
         template.print()
         
         let macroExecutor = MacroExecutor(template: template)
-        template = macroExecutor.execute()
+        template = try macroExecutor.execute()
         
         template.print()
         

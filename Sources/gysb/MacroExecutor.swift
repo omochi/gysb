@@ -8,15 +8,15 @@
 import Foundation
 
 // convert AST
-class MacroExecutor : ASTVisitor {
+class MacroExecutor : ASTThrowableVisitor {
     typealias VisitResult = AnyASTNode
     
     init(template: Template) {
         self.template = template
     }
     
-    func execute() -> Template {
-        return try! template.accept(visitor: self).downCast(to: Template.self)
+    func execute() throws -> Template {
+        return try template.acceptOrThrow(visitor: self).downCast(to: Template.self)
     }
     
     func visit(nop: NopNode) -> AnyASTNode {
@@ -35,14 +35,13 @@ class MacroExecutor : ASTVisitor {
         return AnyASTNode(subst)
     }
     
-    func visit(macroCall: MacroCallNode) -> AnyASTNode {
+    func visit(macroCall: MacroCallNode) throws -> AnyASTNode {
         switch macroCall.name {
         case "include_code":
             // todo
             break
         default:
-            // todo: throw
-            fatalError("undefined macro: \(macroCall.name)")
+            throw Error(message: "undefined macro: \(macroCall.name)")
         }
         
         return AnyASTNode(macroCall)
@@ -55,7 +54,7 @@ class MacroExecutor : ASTVisitor {
     func visit(template: Template) throws -> AnyASTNode {
         var newChildren = [AnyASTNode]()
         for child in template.children {
-            let newChild = child.accept(visitor: self)
+            let newChild = try child.acceptOrThrow(visitor: self)
             newChildren.append(newChild)
         }
         

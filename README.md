@@ -69,21 +69,28 @@ Usage: .build/x86_64-apple-macosx10.10/debug/gysb [mode] path
 
 ## macro
 
-include_code(path): include code here
+- include_code(path): include code here. path: glob pattern.
 
 ### example
 
-```
-[omochi@omochi-iMac gysb (master=)]$ cat Examples/include.swift.gysb 
-%! include_code("lib.swift")
+[omochi@omochi-iMac gysb (master +=)]$ ls Examples/libs
+func_aaa.swift func_bbb.swift
+[omochi@omochi-iMac gysb (master *+=)]$ cat Examples/libs/func_aaa.swift 
+func aaa() -> Int {
+    return 999
+}
+[omochi@omochi-iMac gysb (master *+=)]$ cat Examples/libs/func_bbb.swift 
+func bbb() -> Int {
+    return 777
+}
+[omochi@omochi-iMac gysb (master *+=)]$ cat Examples/include.swift.gysb 
+%! include_code("libs/*.swift")
 %
 aaa=${aaa()}
-[omochi@omochi-iMac gysb (master=)]$ cat Examples/lib.swift 
-func aaa() -> Int {
-	return 999
-}
-[omochi@omochi-iMac gysb (master=)]$ swift run gysb Examples/include.swift.gysb 
+bbb=${bbb()}
+[omochi@omochi-iMac gysb (master *+=)]$ swift run gysb Examples/include.swift.gysb 
 aaa=999
+bbb=777
 ```
 
 

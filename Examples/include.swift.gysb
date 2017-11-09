@@ -1,3 +1,4 @@
-%! include_code("lib.swift")
+%! include_code("libs/*.swift")
 %
 aaa=${aaa()}
+bbb=${bbb()}

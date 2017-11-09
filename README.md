@@ -73,6 +73,7 @@ Usage: .build/x86_64-apple-macosx10.10/debug/gysb [mode] path
 
 ### example
 
+```
 [omochi@omochi-iMac gysb (master +=)]$ ls Examples/libs
 func_aaa.swift func_bbb.swift
 [omochi@omochi-iMac gysb (master *+=)]$ cat Examples/libs/func_aaa.swift 

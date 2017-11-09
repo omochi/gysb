@@ -81,7 +81,8 @@ aaa=${aaa()}
 [omochi@omochi-iMac gysb (master=)]$ cat Examples/lib.swift 
 func aaa() -> Int {
 	return 999
-}[omochi@omochi-iMac gysb (master=)]$ swift run gysb Examples/include.swift.gysb 
+}
+[omochi@omochi-iMac gysb (master=)]$ swift run gysb Examples/include.swift.gysb 
 aaa=999
 ```
 

@@ -11,7 +11,9 @@ class CodeExecutor {
     func execute() throws {
         let dir = NSTemporaryDirectory()
         let file = getBaseName() + "_" + randomSuffix() + ".swift"
-        let path = (dir as NSString).appendingPathComponent(file)
+        
+        let path = URL(fileURLWithPath: dir).appendingPathComponent(file).path
+        
         try code.write(toFile: path, atomically: true, encoding: .utf8)
         try runSwift(path: path)
         try? FileManager.default.removeItem(atPath: path)
@@ -29,14 +31,15 @@ class CodeExecutor {
     }
     
     private func getBaseName() -> String {
-        var name: String = (path as NSString).lastPathComponent
+        var name = URL(fileURLWithPath: path)
+        name = URL(fileURLWithPath: name.lastPathComponent)
         while true {
-            if (name as NSString).pathExtension.isEmpty {
+            if name.pathExtension.isEmpty {
                 break
             }
-            name = (name as NSString).deletingPathExtension
+            name = name.deletingPathExtension()
         }
-        return name
+        return name.relativePath
     }
     
     private func getSwiftPath() throws -> String {

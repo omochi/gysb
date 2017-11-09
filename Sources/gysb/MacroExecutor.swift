@@ -11,6 +11,10 @@ import Foundation
 class MacroExecutor : ASTThrowableVisitor {
     typealias VisitResult = AnyASTNode
     
+    struct IncludeCodeResult {
+        var path: String
+    }
+    
     init(template: Template,
          path: String)
     {
@@ -39,16 +43,15 @@ class MacroExecutor : ASTThrowableVisitor {
     }
     
     func visit(macroCall: MacroCallNode) throws -> AnyASTNode {
-        switch macroCall.name {
-        case "include_code":
-            // todo
-            print("include_code")
-            break
-        default:
-            throw Error(message: "undefined macro: \(macroCall.name)")
-        }
+        let ret = try evalMacroCall(macroCall)
         
-        return AnyASTNode(macroCall)
+        switch ret {
+        case let ret as IncludeCodeResult:
+            let codeNode: CodeNode = try includeCode(path: ret.path)
+            return AnyASTNode(codeNode)
+        default:
+            throw Error(message: "invalid macro call: \(macroCall)")
+        }
     }
     
     func visit(macroStringLiteral: MacroStringLiteralNode) -> AnyASTNode {
@@ -64,7 +67,37 @@ class MacroExecutor : ASTThrowableVisitor {
         
         return AnyASTNode(Template(children: newChildren))
     }
+
+    func eval<X: ASTNode>(node: X) throws -> Any {
+        switch node.switcher {
+        case .macroCall(let x):
+            return try evalMacroCall(x)
+        case .macroStringLiteral(let x):
+            return x.string
+        default:
+            throw Error(message: "can not eval this node: \(node)")
+        }
+    }
     
+    func evalMacroCall(_ call: MacroCallNode) throws -> Any {
+        switch call.name {
+        case "include_code":
+            if call.args.count != 1 {
+                throw Error(message: "macro arg num is wrong")
+            }
+            let path = try cast(eval(node: call.args[0]), to: String.self)
+            return IncludeCodeResult(path: path)
+        default:
+            throw Error(message: "undefined macro: \(call.name)")
+        }
+    }
+    
+    func includeCode(path: String) throws -> CodeNode {
+        let from = URL.init(fileURLWithPath: self.path).deletingLastPathComponent()
+        let path = resolvePath(path, in: from.relativePath)
+        let code = try String.init(contentsOfFile: path, encoding: .utf8) + "\n"
+        return CodeNode(code: code)
+    }
     
     private let template: Template
     private let path: String

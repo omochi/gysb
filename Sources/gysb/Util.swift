@@ -24,3 +24,18 @@ func assertNotThrow<R>(_ reason: String, _ f: () throws -> R) -> R {
         fatalError("assert failure(\(reason)): \(e)")
     }
 }
+
+func cast<T, U>(_ t: T, to: U.Type) throws -> U {
+    guard let u = t as? U else {
+        throw Error(message: "cast failed: type=\(type(of: t)), to=\(U.self)")
+    }
+    return u
+}
+
+func resolvePath(_ path: String, in directory: String) -> String {
+    if (path as NSString).isAbsolutePath {
+        return path
+    }
+    
+    return URL.init(fileURLWithPath: directory).appendingPathComponent(path).relativePath
+}

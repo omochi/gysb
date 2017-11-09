@@ -23,12 +23,12 @@ class Compiler {
         let parser = Parser(source: source)
         var template = try parser.parse()
 
-        template.print()
+//        template.print()
         
         let macroExecutor = MacroExecutor(template: template, path: path)
         template = try macroExecutor.execute()
         
-        template.print()
+//        template.print()
         
         let generator = CodeGenerator(template: template)
         let code = generator.generate()

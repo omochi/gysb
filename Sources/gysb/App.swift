@@ -46,35 +46,8 @@ class App {
             return EXIT_SUCCESS
         }
         
-        let path = option.path!
-        
-        let source = try String(contentsOfFile: path, encoding: .utf8)
-        
-        var template = try Parser.init(source: source).parse()
-        if option.mode == .parse {
-            let out = template.print()
-            print(out, terminator: "")
-            return EXIT_SUCCESS
-        }
-        
-        template = try MacroExecutor.init(template: template, path: path).execute()
-        if option.mode == .macro {
-            let out = template.print()
-            print(out, terminator: "")
-            return EXIT_SUCCESS
-        }
-        
-        let code = CodeGenerator.init(template: template).generate()
-        if option.mode == .compile {
-            print(code)
-            return EXIT_SUCCESS
-        }
-        
-        guard option.mode == .render else {
-            throw Error(message: "invalid mode running")
-        }
-        let result = try CodeExecutor(code: code, path: path).execute()
-        print(result, terminator: "")
+        let driver = Driver.init(path: option.path!)
+        try driver.run(to: .init(appMode: option.mode))
         
         return EXIT_SUCCESS
     }

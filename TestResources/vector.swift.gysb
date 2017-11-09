@@ -1,0 +1,9 @@
+% let vars = ["x", "y", "z", "w"]
+% for n in 2...4 {
+struct Vector${n} {
+    % for i in 0..<n {
+    var ${vars[i]}: Float
+    % }
+}
+
+% }

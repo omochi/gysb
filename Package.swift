@@ -23,5 +23,8 @@ let package = Package(
         .target(
             name: "gysb",
             dependencies: ["GysbKit"]),
+        .testTarget(
+            name: "GysbKitTest",
+            dependencies: ["GysbKit"])
     ]
 )

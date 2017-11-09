@@ -7,7 +7,7 @@
 
 import Foundation
 
-class App {
+public class App {
     enum Mode {
         case help
         case parse
@@ -21,7 +21,9 @@ class App {
         var path: String?
     }
     
-    func main() -> Int32 {
+    public init() {}
+    
+    public func main() -> Int32 {
         do {
             return try _main()
         } catch let e {

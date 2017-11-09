@@ -23,6 +23,17 @@ public class Interpreter {
     
     public var functions: [String: ([Any]) throws -> Any] = [:]
     
+    public func registerFunction<A0, R>(name: String, fn: @escaping (A0) throws -> R) {
+        functions[name] = { (args: [Any]) throws -> Any in
+            guard args.count == 1 else {
+                throw Error(message: "wrong arg num")
+            }
+            let arg0 = try cast(args[0], to: A0.self)
+            let ret: R = try fn(arg0)
+            return ret as Any
+        }
+    }
+    
     @discardableResult
     private func eval(_ node: ASTNode) throws -> Any {
         switch node.switcher {

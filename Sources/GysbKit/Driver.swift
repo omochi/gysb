@@ -8,6 +8,7 @@
 import Foundation
 
 import GysbBase
+import GysbSwiftConfig
 
 class Driver {
     class State {
@@ -17,6 +18,7 @@ class Driver {
             
             var source: String?
             var template: Template?
+            var swiftConfig: URL?
             var codeID: String?
             var rendered: String?
             
@@ -28,7 +30,8 @@ class Driver {
         var writeOnSame: Bool = false
         var entries: [Entry] = []
         var code: String?
-        var executeDir: URL?
+        var workDir: URL?
+        var swiftConfig: Config?
 
         func resultString(index: Int, stage: Stage) -> String {
             switch stage {
@@ -142,14 +145,35 @@ class Driver {
         }
         
         for i in 0..<state.entries.count {
-            let path = state.entries[i].path
-            var template = state.entries[i].template!
-            template = try MacroProcessor.init(template: template, path: path).execute()
-            state.entries[i].template = template
+            try MacroProcessor.init(state: state, index: i).execute()
+        }
+        let swiftConfigs = state.entries.flatMap { $0.swiftConfig }
+        if swiftConfigs.count >= 2 {
+            throw Error(message: "swiftpm definition must be in only one source")
         }
         if stage == .macro {
             return
         }
+        
+        let workDirName: String
+        
+        if let configPath = swiftConfigs.first {
+            let data = try Data.init(contentsOf: configPath)
+            state.swiftConfig = try JSONDecoder().decode(GysbSwiftConfig.Config.self, from: data)
+
+            let str = getSha256(string: configPath.path).slice(start: 0, len: 16)
+            workDirName = "gysb_" + str
+        } else {
+            state.swiftConfig = GysbSwiftConfig.Config()
+            
+            let leaderPath = state.entries.map { $0.path.path }.sorted().first!
+            let str = getSha256(string: leaderPath).slice(start: 0, len: 16)
+            workDirName = "gysb_" + str
+        }
+        
+        let workDir = URL.init(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(workDirName)
+        try FileManager.default.createDirectory(at: workDir, withIntermediateDirectories: true)
+        state.workDir = workDir
         
         for i in 0..<state.entries.count {
             state.entries[i].codeID = "id\(i)"
@@ -170,9 +194,8 @@ class Driver {
             let rendered = try codeExecutor.execute(id: state.entries[i].codeID!)
             state.entries[i].rendered = rendered
         }
-        
-        codeExecutor.clear()
     }
     
+
     private let state: State
 }

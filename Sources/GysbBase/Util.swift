@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CommonCrypto
 
 public func escapeToSwiftLiteral(text: String) -> String {
     var s = text
@@ -32,14 +33,13 @@ public func cast<T, U>(_ t: T, to: U.Type) throws -> U {
     return u
 }
 
-public func resolvePath(_ path: String, in directory: String) -> String {
-    if (path as NSString).isAbsolutePath {
+public func resolvePath(_ path: URL, in directory: URL) -> URL {
+    if (path.relativePath as NSString).isAbsolutePath {
         return path
     }
     
-    return URL.init(fileURLWithPath: directory).appendingPathComponent(path).relativePath
+    return directory.appendingPathComponent(path.relativePath)
 }
-
 
 public func getRandomString(length: Int) -> String {
     let chars = [
@@ -55,3 +55,35 @@ public func getRandomString(length: Int) -> String {
     }
     return ret
 }
+
+public func getSha256(string: String) -> String {
+    let bufLen: Int = Int(CC_SHA256_DIGEST_LENGTH)
+    let buf = UnsafeMutablePointer<UInt8>.allocate(capacity: bufLen)
+    defer { buf.deallocate(capacity: bufLen) }
+    
+    let data = Array(string.utf8)
+    CC_SHA256(data, CC_LONG(data.count), buf)
+
+    var ret = ""
+    for i in 0..<bufLen {
+        let byte: UInt8 = buf[i]
+        ret.append(String.init(format: "%02x", byte))
+    }
+    return ret
+}
+
+public func getSwiftPath() throws -> URL {
+    swiftPath = try swiftPath ?? execWhich(name: "swift")
+    return swiftPath!
+}
+private var swiftPath: URL?
+
+public func getSwiftcPath() throws -> URL {
+    swiftcPath = try swiftcPath ?? execWhich(name: "swiftc")
+    return swiftcPath!
+}
+private var swiftcPath: URL?
+
+
+
+

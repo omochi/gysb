@@ -1,0 +1,9 @@
+%! swift_config("gysb_swift_config.json")
+%{
+//	import Foundation
+//	import Yasm
+
+//	let yamlStr = try! String(contentsOfFile: "data.yml")
+//	let yaml = try Yaml.compose(yaml: yamlStr)
+}%
+${ FileManager.default.currentDirectoryPath }

@@ -15,21 +15,20 @@ let package = Package(
             name: "gysb",
             targets: ["gysb"])
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/IBM-Swift/CommonCrypto.git", from: "0.1.5")
+    ],
     targets: [
-        .target(
-            name: "GysbBase"),
-        .target(
-            name: "GysbMacroLib",
-            dependencies: ["GysbBase"]),
-        .target(
-            name: "GysbKit",
-            dependencies: ["GysbBase", "GysbMacroLib"]),
-        .target(
-            name: "gysb",
-            dependencies: ["GysbKit"]),
-        .testTarget(
-            name: "GysbKitTest",
-            dependencies: ["GysbKit"])
+        .target(name: "GysbBase"),
+        .target(name: "GysbSwiftConfig",
+                dependencies: ["GysbBase"]),
+        .target(name: "GysbMacroLib",
+                dependencies: ["GysbBase"]),
+        .target(name: "GysbKit",
+                dependencies: ["GysbBase", "GysbSwiftConfig", "GysbMacroLib"]),
+        .target(name: "gysb",
+                dependencies: ["GysbKit"]),
+        .testTarget(name: "GysbKitTest",
+                    dependencies: ["GysbKit"])
     ]
 )

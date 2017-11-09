@@ -11,30 +11,21 @@ import GysbMacroLib
 
 // convert AST
 class MacroProcessor {
-    struct SpecialFuncCall {
-        var name: String
-        var args: [Any]
-    }
-    struct IncludeCodeResult {
-        var path: String
+    init(state: Driver.State, index: Int) {
+        self.state = state
+        self.stateIndex = index
     }
     
-    init(template: Template,
-         path: URL)
-    {
-        self.template = template
-        self.path = path
-    }
-    
-    func execute() throws -> Template {
+    func execute() throws {
         joinMacroNodes()
         try processMacro()
-        return self.template
     }
     
     private func joinMacroNodes() {
         var index = 0
         var newChildren = [AnyASTNode]()
+        
+        let template = self.stateEntry.template!
         
         while true {
             if index >= template.children.count {
@@ -68,12 +59,14 @@ class MacroProcessor {
             }
         }
         
-        self.template = Template(children: newChildren)
+        self.stateEntry.template = Template(children: newChildren)
     }
     
     private func processMacro() throws {
         var index = 0
         var newChildren = [AnyASTNode]()
+        
+        let template = self.stateEntry.template!
         
         while true {
             if index >= template.children.count {
@@ -91,37 +84,51 @@ class MacroProcessor {
             }
         }
         
-        self.template = Template(children: newChildren)
+        self.stateEntry.template = Template(children: newChildren)
     }
     
     private func evalMacroNode(_ macro: MacroNode) throws -> [AnyASTNode] {
         var ret = [AnyASTNode]()
-        let interpreter = Interpreter(source: macro.code)
-        interpreter.functions["include_code"] = { (args: [Any]) -> Any in
-            guard args.count == 1 else {
-                throw Error(message: "wrong arg num")
-            }
-            let path = try cast(args[0], to: String.self)
+        let ipr = Interpreter(source: macro.code)
+        
+        ipr.registerFunction(name: "include_code") { (path: String) -> Void in
             let codes = try self.includeCode(path: path)
             ret.append(contentsOf: codes.map { AnyASTNode($0) })
             return ()
         }
-        try interpreter.run()
+
+        ipr.registerFunction(name: "swift_config") { (path: String) -> Void in
+            let path = resolvePath(URL.init(fileURLWithPath: path), in: self.basePath)
+            self.stateEntry.swiftConfig = path
+        }
+        
+        try ipr.run()
         return ret
     }
     
     private func includeCode(path pattern: String) throws -> [CodeNode] {
         var ret = [CodeNode]()
         
-        let from = self.path.deletingLastPathComponent()
-        
-        for path in glob(pattern: pattern, in: from.path) {
-            let code = try String.init(contentsOfFile: path, encoding: .utf8) + "\n"
+        for path in glob(pattern: pattern, in: basePath) {
+            let code = try String.init(contentsOf: path, encoding: .utf8) + "\n"
             ret.append(CodeNode(code: code))
         }
         return ret
     }
+
+    private var stateEntry: Driver.State.Entry {
+        get {
+            return state.entries[stateIndex]
+        }
+        set {
+            state.entries[stateIndex] = newValue
+        }
+    }
     
-    private var template: Template
-    private let path: URL
+    private var basePath: URL {
+        return stateEntry.path.deletingLastPathComponent()
+    }
+    
+    private let state: Driver.State
+    private let stateIndex: Int
 }

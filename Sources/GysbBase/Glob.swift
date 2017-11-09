@@ -7,15 +7,15 @@
 
 import Foundation
 
-public func glob(pattern: String, in directory: String?) -> [String] {
+public func glob(pattern: String, in directory: URL?) -> [URL] {
     let fm = FileManager.default
     
     let ocd = fm.currentDirectoryPath
-    var ret = [String]()
+    var ret = [URL]()
     
-    if let dir = directory {
-        fm.changeCurrentDirectoryPath(dir)
-    }
+    let directory: URL = directory ?? URL.init(fileURLWithPath: fm.currentDirectoryPath)
+
+    fm.changeCurrentDirectoryPath(directory.path)
     
     var obj = glob_t.init()
     defer {
@@ -28,7 +28,8 @@ public func glob(pattern: String, in directory: String?) -> [String] {
                 nil, &obj)
     for i in 0..<obj.gl_matchc {
         let path = String.init(cString: obj.gl_pathv[Int(i)]!)
-        ret.append(URL.init(fileURLWithPath: path).path)
+        ret.append(resolvePath(URL.init(fileURLWithPath: path),
+                               in: directory))
     }
     
     return ret

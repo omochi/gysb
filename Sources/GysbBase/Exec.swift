@@ -11,7 +11,7 @@ public struct ExecError : Swift.Error, CustomStringConvertible {
     public var path: String
     public var arguments: [String]
     public var statusCode: Int32
-    public var stderr: String
+    public var output: String
     
     public var description: String {
         var ls = [
@@ -22,27 +22,27 @@ public struct ExecError : Swift.Error, CustomStringConvertible {
             "arg[\(i)]=[\(arg)]" }
         ls += [
             "statusCode=[\(statusCode)]",
-            "stderr=",
+            "output=",
+            output,
             ""]
-        
-        return ls.joined(separator: "\n") + stderr + "\n"
+
+        return ls.joined(separator: "\n")
     }
 }
 
 @discardableResult
 public func execCapture(path: URL,
-                 arguments: [String]) throws -> String
+                        arguments: [String]) throws -> String
 {
     let stdoutPipe = Pipe()
-    var stdoutData = Data()
+    var outputData = Data()
     stdoutPipe.fileHandleForReading.readabilityHandler = { file in
-        stdoutData.append(file.availableData)
+        outputData.append(file.availableData)
     }
     
     let stderrPipe = Pipe()
-    var stderrData = Data()
     stderrPipe.fileHandleForReading.readabilityHandler = { file in
-        stderrData.append(file.availableData)
+        outputData.append(file.availableData)
     }
     
     let process = Process()
@@ -57,27 +57,24 @@ public func execCapture(path: URL,
     stderrPipe.fileHandleForReading.readabilityHandler = nil
     
     // TODO: robust decoding to prevent failure always
-    guard let stdoutStr = String.init(data: stdoutData, encoding: .utf8) else {
-        throw Error(message: "stdout decode failed")
-    }
-    guard let stderrStr = String.init(data: stderrData, encoding: .utf8) else {
-        throw Error(message: "stderr decode failed")
+    guard let outputStr = String.init(data: outputData, encoding: .utf8) else {
+        throw Error(message: "output data decode failed")
     }
     
     if process.terminationStatus != EXIT_SUCCESS {
         throw ExecError(path: path.path,
                         arguments: arguments,
                         statusCode: process.terminationStatus,
-                        stderr: stderrStr)
+                        output: outputStr)
     }
     
-    return stdoutStr
+    return outputStr
 }
 
-public func execWhich(name: String) throws -> String {
+public func execWhich(name: String) throws -> URL {
     var path = try execCapture(path: URL.init(fileURLWithPath: "/usr/bin/which"),
                                arguments: [name])
     path = path.replacingOccurrences(of: "\\s+$", with: "", options: .regularExpression)
-    return path
+    return URL.init(fileURLWithPath: path)
 }
 

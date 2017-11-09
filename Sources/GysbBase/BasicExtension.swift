@@ -6,16 +6,23 @@
 //
 
 extension String {
-    func getOrNone(_ index: String.Index) -> Character? {
+    public func getOrNone(_ index: String.Index) -> Character? {
         if index == endIndex {
             return nil
         }
         return self[index]
     }
+    
+    public func slice(start: Int, len: Int) -> String {
+        let start = max(0, min(start, self.count))
+        let end = max(0, min(start + len, self.count))
+        let range = index(startIndex, offsetBy: start)..<index(startIndex, offsetBy: end)
+        return String(self[range])
+    }
 }
 
 extension Sequence {
-    func testAll(_ pred: (Element) -> Bool) -> Bool {
+    public func testAll(_ pred: (Element) -> Bool) -> Bool {
         for x in self {
             if !pred(x) {
                 return false
@@ -24,7 +31,7 @@ extension Sequence {
         return true
     }
     
-    func testAny(_ pred: (Element) -> Bool) -> Bool {
+    public func testAny(_ pred: (Element) -> Bool) -> Bool {
         for x in self {
             if pred(x) {
                 return true

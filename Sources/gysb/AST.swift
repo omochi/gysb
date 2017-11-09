@@ -20,8 +20,10 @@ extension ASTNode {
 }
 
 extension ASTNode {
-    func print() {
-        accept(visitor: ASTPrinter())
+    func print() -> String {
+        let p = ASTPrinter()
+        accept(visitor: p)
+        return p.output
     }
 }
 

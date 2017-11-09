@@ -47,9 +47,11 @@ class ASTPrinter : ASTVisitor {
     }
     
     func write(_ string: String) {
-        print(String.init(repeating: "  ", count: indent), terminator: "")
-        print(string)
+        output += String.init(repeating: "  ", count: indent)
+        output += string
+        output += "\n"
     }
     
     var indent: Int = 0
+    var output: String = ""
 }

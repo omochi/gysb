@@ -52,13 +52,15 @@ class App {
         
         var template = try Parser.init(source: source).parse()
         if option.mode == .parse {
-            template.print()
+            let out = template.print()
+            print(out, terminator: "")
             return EXIT_SUCCESS
         }
         
         template = try MacroExecutor.init(template: template, path: path).execute()
         if option.mode == .macro {
-            template.print()
+            let out = template.print()
+            print(out, terminator: "")
             return EXIT_SUCCESS
         }
         
@@ -71,7 +73,8 @@ class App {
         guard option.mode == .render else {
             throw Error(message: "invalid mode running")
         }
-        try CodeExecutor(code: code, path: path).execute()
+        let result = try CodeExecutor(code: code, path: path).execute()
+        print(result, terminator: "")
         
         return EXIT_SUCCESS
     }
@@ -101,6 +104,10 @@ class App {
         case "--render":
             mode = .render
         default:
+            if arg.count > 2 && String(arg[..<arg.index(arg.startIndex, offsetBy: 2)]) == "--" {
+                throw Error(message: "unknown option: \(arg)")
+            }
+            
             index -= 1
             mode = .render
         }

@@ -92,23 +92,37 @@ public class Driver {
     }
     
     private func drive() throws {
-        state.entries = state.option.paths.map { (pathStr: String) -> Entry in
-            let path = URL.init(fileURLWithPath: pathStr)
-            return Entry.init(path: path)
+        if state.option.sourceDirs {
+            state.option.writeOnSame = true
+            
+            state.entries = []
+            for sourceDirStr in state.option.paths {
+                let sourceDir = URL.init(fileURLWithPath: sourceDirStr)
+                let paths: [URL] = try glob(pattern: "**/*.gysb", in: sourceDir)
+                    .map { sourceDir.appendingPathComponent($0.relativePath) }
+                state.entries.append(contentsOf: paths.map { (path: URL) -> Entry in
+                    return Entry.init(path: path)
+                })
+            }
+        } else {
+            state.entries = state.option.paths.map { (pathStr: String) -> Entry in
+                let path = URL.init(fileURLWithPath: pathStr)
+                return Entry.init(path: path)
+            }
         }
         
         if state.option.writeOnSame {
             state.logPrintEnabled = true
             
             guard case .render = state.option.stage else {
-                throw Error(message: "`--write` requires `--render` mode")
+                throw DriverError.invalidOption("`--write` requires `--render` mode")
             }
             
             for i in 0..<state.entries.count {
                 let path = state.entries[i].path
                 if state.entries[i].destPath == nil {
                     guard path.pathExtension == "gysb" else {
-                        throw Error(message: "source path has not `.gysb`, so dest path decision failed: path=\(path.path)")
+                        throw DriverError.invalidOption("source path has not `.gysb`, so dest path decision failed: path=\(path.path)")
                     }
                     state.entries[i].destPath = path.deletingPathExtension()
                 }
@@ -117,7 +131,7 @@ public class Driver {
             state.logPrintEnabled = false
             
             guard state.entries.count == 1 else {
-                throw Error(message: "entry num must be 1 to print")
+                throw DriverError.invalidOption("you can not specify multiple sources to render. consider `--write` mode")
             }
         }
 
@@ -246,7 +260,7 @@ public class Driver {
         for iw in 0..<state.buildWorks.count {
             let work = state.buildWorks[iw]
             let executor = CodeExecutor.init(state: state, workIndex: iw, output: self.logPut)
-            log("workdir: \(work.workDir.path)")
+            log("[\(iw + 1)/\(state.buildWorks.count)] workdir: \(work.workDir.path)")
             try executor.deploy()
             
             for ie in work.entryIndices {

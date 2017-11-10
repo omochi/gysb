@@ -37,45 +37,40 @@ public class App {
     
     public func main() -> Int32 {
         do {
-            return try _main()
+            let option: Option = try parseCommandLine(args: CommandLine.arguments)
+            
+            switch option {
+            case .help:
+                printHelp()
+                return EXIT_SUCCESS
+            case .driver(let opt):
+                let driver = Driver.init(option: opt)
+                try driver.run()
+                return EXIT_SUCCESS
+            }
         } catch let e {
-            print("[Error] \(e)")
-            return EXIT_FAILURE
-        }
-    }
-    
-    private func _main() throws -> Int32 {
-        let option: Option
-        do {
-            option = try parseCommandLine(args: CommandLine.arguments)
-        } catch let e {
-            print("[CommandLine Error] \(e)")
-            print()
-            printHelp()
-            return EXIT_FAILURE
-        }
-        
-        switch option {
-        case .help:
-            printHelp()
-            return EXIT_SUCCESS
-        case .driver(let opt):
-            let driver = Driver.init(option: opt)
-            try driver.run()
-            return EXIT_SUCCESS
+            switch e {
+            case DriverError.invalidOption:
+                print(e)
+                print()
+                printHelp()
+                return EXIT_FAILURE
+            default:
+                print("\(e)")
+                return EXIT_FAILURE
+            }
         }
     }
     
     private func parseCommandLine(args: [String]) throws -> Option {
         var index = 1
         
-        var mode: Mode? = nil
-        var writeOnSame = false
-        var paths: [String] = []
+        var option = Driver.Option()
+        var mode: Mode?
         
         while true {
             if index >= args.count {
-                throw Error(message: "no mode specified")
+                throw DriverError.invalidOption("no mode specified")
             }
 
             let arg = args[index]
@@ -93,10 +88,12 @@ public class App {
             case "--render":
                 mode = .render
             case "--write":
-                writeOnSame = true
+                option.writeOnSame = true
+            case "--source-dirs":
+                option.sourceDirs = true
             default:
                 if arg.count > 2 && String(arg[..<arg.index(arg.startIndex, offsetBy: 2)]) == "--" {
-                    throw Error(message: "unknown option: \(arg)")
+                    throw DriverError.invalidOption("unknown option: \(arg)")
                 }
                 
                 index -= 1
@@ -110,39 +107,20 @@ public class App {
             }
         }
         
+        option.stage = mode!.toDriverStage()
+        
         if mode == .help {
             return .help
         }
         
         if index >= args.count {
-            throw Error(message: "path not specified")
+            throw DriverError.invalidOption("path not specified")
         }
         
         for arg in args[index...] {
-            paths.append(arg)
+            option.paths.append(arg)
         }
         
-        switch mode! {
-        case .parse, .macro:
-            if paths.count >= 2 {
-                throw Error(message: "can not specify multiple sources with this mode")
-            }
-        case .compile:
-            break
-        case .render:
-            if paths.count >= 2 {
-                guard writeOnSame else {
-                    throw Error(message: "if you specify multiple sources, need to specify `--write`")
-                }
-            }
-        case .help:
-            break
-        }
-    
-        var option = Driver.Option()
-        option.stage = mode!.toDriverStage()
-        option.writeOnSame = writeOnSame
-        option.paths = paths
         return .driver(option)
     }
     
@@ -159,7 +137,8 @@ public class App {
         
         # flags
             --write: write output on same directory (extension removed)
-            --source-dirs: paths means directory and search *.gysb
+            --source-dirs: paths means directory and search *.gysb (automatically enable `--write`)
+        
         """
         print(text)
     }

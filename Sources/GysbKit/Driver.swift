@@ -9,49 +9,49 @@ import Foundation
 
 import GysbBase
 
-class Driver {
-    class State {
-        struct Entry {
-            var path: URL
-            var configPath: URL?
+public class Driver {
+    public class State {
+       public  struct Entry {
+            public var path: URL
+            public var configPath: URL?
             
-            var destPath: URL?
+            public var destPath: URL?
             
-            var source: String?
-            var template: Template?
+            public var source: String?
+            public var template: Template?
 
             
-            var code: String?
+            public var code: String?
             
-            var rendered: String?
+            public var rendered: String?
             
-            init(path: URL) {
+            public init(path: URL) {
                 self.path = path
             }
         }
         
-        struct BuildWork {
-            var config: Config
-            var workDir: URL
-            var entryIndices: [Int]
+        public struct BuildWork {
+            public var config: Config
+            public var workDir: URL
+            public var entryIndices: [Int]
         }
         
-        var writeOnSame: Bool = false
-        var logPrintEnabled: Bool = false
+        public var writeOnSame: Bool = false
+        public var logPrintEnabled: Bool = false
         
-        var entries: [Entry] = []
-        var buildWorks: [BuildWork] = []
+        public var entries: [Entry] = []
+        public var buildWorks: [BuildWork] = []
         
-        let includeFilesTargetName: String = "gysb_include_files"
+        public let includeFilesTargetName: String = "gysb_include_files"
     }
     
-    enum Stage {
+    public enum Stage {
         case parse
         case macro
         case compile
         case render
         
-        init(appMode: App.Mode) {
+        public init(appMode: App.Mode) {
             switch appMode {
             case .parse:
                 self = .parse
@@ -67,15 +67,15 @@ class Driver {
         }
     }
     
-    init(state: State) {
+    public init(state: State) {
         self.state = state
     }
     
-    convenience init(path: URL) {
+    public convenience init(path: URL) {
         self.init(paths: [path], writeOnSame: false)
     }
     
-    convenience init(paths: [URL], writeOnSame: Bool) {
+    public convenience init(paths: [URL], writeOnSame: Bool) {
         let state = State.init()
         state.entries = paths.map {
             State.Entry.init(path: $0)
@@ -84,7 +84,7 @@ class Driver {
         self.init(state: state)
     }
     
-    func run(to stage: Stage) throws {
+    public func run(to stage: Stage) throws {
         if state.writeOnSame {
             guard stage == .render else {
                 throw Error(message: "`--write` requires `--render` mode")
@@ -115,7 +115,7 @@ class Driver {
         }
     }
     
-    func render(to stage: Stage) throws -> String {
+    public func render(to stage: Stage) throws -> String {
         switch stage {
         case .parse, .macro, .render:
             guard state.entries.count == 1 else {

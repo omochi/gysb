@@ -7,15 +7,15 @@
 
 import Foundation
 
-class TokenReader {
-    struct Position {
-        var index: String.Index
+public class TokenReader {
+    public struct Position {
+        public var index: String.Index
         
-        var line: Int
-        var column: Int
+        public var line: Int
+        public var column: Int
     }
     
-    init(source: String) {
+    public init(source: String) {
         self.source = source
         
         self._position = Position(index: source.startIndex,
@@ -23,15 +23,15 @@ class TokenReader {
                                   column: 1)
     }
     
-    var position: Position {
+    public var position: Position {
         return _position
     }
     
-    func seekTo(position: Position) {
+    public func seekTo(position: Position) {
         _position = position
     }
     
-    func read() -> Token {
+    public func read() -> Token {
         guard let ch = readChar() else {
             return .end
         }
@@ -101,7 +101,7 @@ class TokenReader {
         }
     }
     
-    func peek() -> Token {
+    public func peek() -> Token {
         let pos = self.position
         let ret = read()
         seekTo(position: pos)

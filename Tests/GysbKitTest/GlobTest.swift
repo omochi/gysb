@@ -1,6 +1,6 @@
 import XCTest
 import GysbBase
-@testable import GysbKit
+import GysbKit
 import Foundation
 class GlobTest: XCTestCase {
     func testExpandGlobStar() throws {

@@ -1,8 +1,8 @@
 import Foundation
 import GysbBase
 
-class CodeExecutor {
-    init(state: Driver.State,
+public class CodeExecutor {
+    public init(state: Driver.State,
          workIndex: Int,
          output: @escaping (String) -> Void)
     {
@@ -11,7 +11,7 @@ class CodeExecutor {
         self.output = output
     }
     
-    func deploy() throws {
+    public func deploy() throws {
         let fm = FileManager.default
         
         let includeFiles = buildWork.config.includesFiles
@@ -73,7 +73,7 @@ class CodeExecutor {
                                print: state.logPrintEnabled ? output : nil)        
     }
     
-    func execute(entryIndex: Int) throws -> String {
+    public func execute(entryIndex: Int) throws -> String {
         let dir = state.entries[entryIndex].path.deletingLastPathComponent()
         let cdBack = changeCurrentDirectory(path: dir)
         defer { cdBack() }

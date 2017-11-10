@@ -7,13 +7,13 @@
 
 import Foundation
 
-class CodeGenerator {
-    init(state: Driver.State, entryIndex: Int) {
+public class CodeGenerator {
+    public init(state: Driver.State, entryIndex: Int) {
         self.state = state
         self.entryIndex = entryIndex
     }
     
-    func generate() -> String {
+    public func generate() -> String {
         if buildWork.config.includesFiles.count > 0 {
             emit("""
                 import \(state.includeFilesTargetName)

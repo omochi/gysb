@@ -1,5 +1,5 @@
 import XCTest
-@testable import GysbKit
+import GysbKit
 import Foundation
 class TokenReaderTest: XCTestCase {
     func testTokenReader() {

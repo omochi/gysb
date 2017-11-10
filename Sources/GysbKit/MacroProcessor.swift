@@ -10,13 +10,13 @@ import GysbBase
 import GysbMacroLib
 
 // convert AST
-class MacroProcessor {
-    init(state: Driver.State, index: Int) {
+public class MacroProcessor {
+    public init(state: Driver.State, index: Int) {
         self.state = state
         self.stateIndex = index
     }
     
-    func execute() throws {
+    public func execute() throws {
         joinMacroNodes()
         try processMacro()
     }

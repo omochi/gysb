@@ -9,7 +9,7 @@ import Foundation
 import GysbBase
 
 public class App {
-    enum Mode {
+    public enum Mode {
         case help
         case parse
         case macro
@@ -17,12 +17,12 @@ public class App {
         case render
     }
     
-    struct Option {
-        var mode: Mode
-        var writeOnSame: Bool = false
-        var paths: [URL] = []
+    public struct Option {
+        public var mode: Mode
+        public var writeOnSame: Bool = false
+        public var paths: [URL] = []
         
-        init(mode: Mode) {
+        public init(mode: Mode) {
             self.mode = mode
         }
     }
@@ -38,7 +38,7 @@ public class App {
         }
     }
     
-    func _main() throws -> Int32 {
+    private func _main() throws -> Int32 {
         let option: Option
         do {
             option = try parseCommandLine(args: CommandLine.arguments)

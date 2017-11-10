@@ -8,7 +8,7 @@
 import Foundation
 
 extension Driver.State {
-    func resultString(index: Int, stage: Driver.Stage) -> String {
+    public func resultString(index: Int, stage: Driver.Stage) -> String {
         switch stage {
         case .parse, .macro:
             return entries[index].template!.print()
@@ -19,11 +19,11 @@ extension Driver.State {
         }
     }
     
-    func targetName(index: Int) -> String {
+    public func targetName(index: Int) -> String {
         return "render\(index)"
     }
     
-    func buildWorkIndexForEntry(index: Int) -> Int? {
+    public func buildWorkIndexForEntry(index: Int) -> Int? {
         return buildWorks.index { work in
             work.entryIndices.contains(index)
         }

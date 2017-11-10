@@ -5,7 +5,7 @@
 //  Created by omochimetaru on 2017/11/07.
 //
 
-enum Token : CustomStringConvertible {
+public enum Token : CustomStringConvertible {
     case char(String)
     case newline(String) // \r\n, \n, \r
     case white(String) // " ", \t
@@ -18,7 +18,7 @@ enum Token : CustomStringConvertible {
     case rightBrace // }
     case end
     
-    var description: String {
+    public var description: String {
         switch self {
         case let .char(char):
             return char

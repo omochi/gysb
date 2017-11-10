@@ -8,15 +8,13 @@
 import Foundation
 import GysbBase
 
-class TemplateCodeGenerator {
-    typealias VisitResult = Void
-    
-    init(template: Template, emit: @escaping (String) -> Void) {
+public class TemplateCodeGenerator {    
+    public init(template: Template, emit: @escaping (String) -> Void) {
         self.template = template
         self._emit = emit
     }
     
-    func generate() {
+    public func generate() {
         process(template)
     }
     

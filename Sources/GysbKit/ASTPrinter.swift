@@ -5,12 +5,12 @@
 //  Created by omochimetaru on 2017/11/07.
 //
 
-class ASTPrinter {
-    init(node: AnyASTNode) {
+public class ASTPrinter {
+    public init(node: AnyASTNode) {
         self.node = node
     }
     
-    func print() -> String {
+    public func print() -> String {
         process(node)
         return output
     }

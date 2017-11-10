@@ -10,19 +10,25 @@ import Foundation
 class TokenReader {
     struct Position {
         var index: String.Index
+        
+        var line: Int
+        var column: Int
     }
     
     init(source: String) {
         self.source = source
-        self.index = source.startIndex
+        
+        self._position = Position(index: source.startIndex,
+                                  line: 1,
+                                  column: 1)
     }
     
     var position: Position {
-        return Position(index: index)
+        return _position
     }
     
     func seekTo(position: Position) {
-        self.index = position.index
+        _position = position
     }
     
     func read() -> Token {
@@ -30,24 +36,31 @@ class TokenReader {
             return .end
         }
         
+        func emitNewLine(_ s: String) -> Token {
+            self._position = Position(index: _position.index,
+                                      line: _position.line + 1,
+                                      column: 1)
+            return .newline(s)
+        }
+        
         switch ch {
         case "\r":
-            let index = self.index
+            let pos = position
             switch readChar() {
             case .some("\n"):
-                return .newline("\r\n")
+                return emitNewLine("\r\n")
             default:
-                self.index = index
-                return .newline("\r")
+                seekTo(position: pos)
+                return emitNewLine("\r")
             }
         case "\n":
-            return .newline("\n")
+            return emitNewLine("\n")
         case " ":
             return .white(" ")
         case "\t":
             return .white("\t")
         case "%":
-            let index = self.index
+            let pos = position
             switch readChar() {
             case .some("%"):
                 // escaped
@@ -57,11 +70,11 @@ class TokenReader {
             case .some("!"):
                 return .macroLine
             default:
-                self.index = index
+                seekTo(position: pos)
                 return .codeLine
             }
         case "$":
-            let index = self.index
+            let pos = position
             switch readChar() {
             case .some("$"):
                 // escaped
@@ -69,18 +82,18 @@ class TokenReader {
             case .some("{"):
                 return .substOpen
             default:
-                self.index = index
+                seekTo(position: pos)
                 return .char("$")
             }
         case "{":
             return .leftBrace
         case "}":
-            let index = self.index
+            let pos = position
             switch readChar() {
             case .some("%"):
                 return .codeClose
             default:
-                self.index = index
+                seekTo(position: pos)
                 return .rightBrace
             }
         default:
@@ -96,15 +109,16 @@ class TokenReader {
     }
     
     private func readChar() -> String? {
-        let index = self.index
-        if index == source.endIndex {
+        if position.index == source.endIndex {
             return nil
         }
-        let char = String(source[index])
-        self.index = source.index(after: index)
+        let char = String(source[position.index])
+        self._position = Position(index: source.index(after: position.index),
+                                  line: position.line,
+                                  column: position.column + 1)
         return char
     }
     
     private var source: String
-    private var index: String.Index
+    private var _position: Position
 }

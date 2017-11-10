@@ -5,19 +5,21 @@
 //  Created by omochimetaru on 2017/11/07.
 //
 
+import Foundation
 import GysbBase
 
-class Parser {
-    struct ParseTextResult {
+public class Parser {
+    public struct ParseTextResult {
         var text: TextNode
         var lineEnd: Bool
     }
     
-    init(source: String) {
+    public init(source: String, path: URL?) {
+        self.path = path
         tokenReader = TokenReader(source: source)
     }
     
-    func parse() throws -> Template {
+    public func parse() throws -> Template {
         var children = [AnyASTNode]()
         while let nodes = try parseLine() {
             nodes.forEach { node in
@@ -59,11 +61,11 @@ class Parser {
                 ret.append(AnyASTNode(code))
                 return ret
             case .codeClose:
-                throw Error(message: "invalid codeClose here")
+                throw makeError(message: "invalid codeClose here", position: pos)
             case .codeLine:
-                throw Error(message: "invalid codeLine here")
+                throw makeError(message: "invalid codeLine here", position: pos)
             case .macroLine:
-                throw Error(message: "invalid macroLine here")
+                throw makeError(message: "invalid macroLine here", position: pos)
             case .substOpen:
                 tokenReader.seekTo(position: pos)
                 let subst = try parseSubst()
@@ -104,7 +106,7 @@ class Parser {
                     return
                 case .end:
                     if firstLoop {
-                        throw Error(message: "no token")
+                        throw makeError(message: "no token", position: pos)
                     } else {
                         return
                     }
@@ -122,12 +124,14 @@ class Parser {
     private func parseCodeBlock() throws -> CodeNode {
         var code: String = ""
 
+        let pos = tokenReader.position
         let openToken = tokenReader.read()
         guard case .codeOpen = openToken else {
-            throw Error(message: "no codeOpen")
+            throw makeError(message: "no codeOpen", position: pos)
         }
 
         while true {
+            let pos = tokenReader.position
             let token = tokenReader.read()
 
             switch token {
@@ -135,7 +139,7 @@ class Parser {
                 eatWhiteAndNewlineTail()
                 return CodeNode(code: code)
             case .end:
-                throw Error(message: "no codeClose")
+                throw makeError(message: "no codeClose", position: pos)
             default:
                 code.append(token.description)
             }
@@ -215,9 +219,11 @@ class Parser {
         var code: String = ""
 
         code.append(eatWhiteLead())
+        
+        let pos = tokenReader.position
         let openToken = tokenReader.read()
         guard case .codeLine = openToken else {
-            throw Error(message: "no codeLine")
+            throw makeError(message: "no codeLine", position: pos)
         }
 
         while true {
@@ -237,9 +243,11 @@ class Parser {
         var code: String = ""
         
         code.append(eatWhiteLead())
+        
+        let pos = tokenReader.position
         let openToken = tokenReader.read()
         guard case .macroLine = openToken else {
-            throw Error(message: "no macroLine")
+            throw makeError(message: "no macroLine", position: pos)
         }
         
         while true {
@@ -258,14 +266,16 @@ class Parser {
     private func parseSubst() throws -> SubstNode {
         var code: String = ""
 
+        let pos = tokenReader.position
         let openToken = tokenReader.read()
         guard case .substOpen = openToken else {
-            throw Error(message: "no substOpen")
+            throw makeError(message: "no substOpen", position: pos)
         }
         
         var braceDepth: Int = 0
         
         while true {
+            let pos = tokenReader.position
             let token = tokenReader.read()
             
             switch token {
@@ -280,12 +290,20 @@ class Parser {
                     return SubstNode(code: code)
                 }
             case .end:
-                throw Error(message: "no substClose")
+                throw makeError(message: "no substClose", position: pos)
             default:
                 code.append(token.description)
             }
         }
     }
+    
+    private func makeError(message: String, position: TokenReader.Position) -> ParserError {
+        return ParserError.init(message: message,
+                                path: path,
+                                line: position.line,
+                                column: position.column)
+    }
 
     private let tokenReader: TokenReader
+    private let path: URL?
 }

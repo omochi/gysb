@@ -163,7 +163,8 @@ class Driver {
         
         for i in 0..<state.entries.count {
             let source = state.entries[i].source!
-            let template = try Parser.init(source: source).parse()
+            let path = state.entries[i].path
+            let template = try Parser.init(source: source, path: path).parse()
             state.entries[i].template = template
             state.entries[i].source = nil
         }

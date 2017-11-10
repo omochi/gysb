@@ -7,17 +7,17 @@
 
 import GysbBase
 
-protocol ASTNode : CustomStringConvertible {
+public protocol ASTNode : CustomStringConvertible {
     var switcher: ASTNodeSwitcher { get }
 }
 
 extension ASTNode {
-    func print() -> String {
+    public func print() -> String {
         return ASTPrinter(node: AnyASTNode(self)).print()
     }
 }
 
-enum ASTNodeSwitcher {
+public enum ASTNodeSwitcher {
     case nop(NopNode)
     case text(TextNode)
     case code(CodeNode)
@@ -26,92 +26,92 @@ enum ASTNodeSwitcher {
     case template(Template)
 }
 
-struct AnyASTNode : ASTNode {
-    init<X: ASTNode>(_ base: X) {
+public struct AnyASTNode : ASTNode {
+    public init<X: ASTNode>(_ base: X) {
         self.base = base
     }
     
-    var switcher: ASTNodeSwitcher {
+    public var switcher: ASTNodeSwitcher {
         return base.switcher
     }
     
-    var description: String {
+    public var description: String {
         return base.description
     }
     
-    func downCast<T>(to: T.Type) throws -> T {
+    public func downCast<T>(to: T.Type) throws -> T {
         return try cast(base, to: T.self)
     }
     
     private let base: ASTNode
 }
 
-struct NopNode : ASTNode {
-    var switcher: ASTNodeSwitcher {
+public struct NopNode : ASTNode {
+    public var switcher: ASTNodeSwitcher {
         return .nop(self)
     }
     
-    var description: String {
+    public var description: String {
         return "Nop()"
     }
 }
 
-struct TextNode : ASTNode {
-    var text: String
+public struct TextNode : ASTNode {
+    public var text: String
     
-    var switcher: ASTNodeSwitcher {
+    public var switcher: ASTNodeSwitcher {
         return .text(self)
     }
     
-    var description: String {
+    public var description: String {
         return "Text(\(escapeToSwiftLiteral(text: text)))"
     }
 }
 
-struct CodeNode : ASTNode {
-    var code: String
+public struct CodeNode : ASTNode {
+    public var code: String
     
-    var switcher: ASTNodeSwitcher {
+    public var switcher: ASTNodeSwitcher {
         return .code(self)
     }
     
-    var description: String {
+    public var description: String {
         return "Code(\(escapeToSwiftLiteral(text: code)))"
     }
 }
 
-struct SubstNode: ASTNode {
-    var code: String
+public struct SubstNode: ASTNode {
+    public var code: String
     
-    var switcher: ASTNodeSwitcher {
+    public var switcher: ASTNodeSwitcher {
         return .subst(self)
     }
     
-    var description: String {
+    public var description: String {
         return "Code(\(escapeToSwiftLiteral(text: code)))"
     }
 }
 
-struct MacroNode: ASTNode {
-    var code: String
+public struct MacroNode: ASTNode {
+    public var code: String
     
-    var switcher: ASTNodeSwitcher {
+    public var switcher: ASTNodeSwitcher {
         return .macro(self)
     }
     
-    var description: String {
+    public var description: String {
         return "Macro(\(escapeToSwiftLiteral(text: code)))"
     }
 }
 
-struct Template : ASTNode {
-    var children: [AnyASTNode] = []
+public struct Template : ASTNode {
+    public var children: [AnyASTNode] = []
     
-    var switcher: ASTNodeSwitcher {
+    public var switcher: ASTNodeSwitcher {
         return .template(self)
     }    
     
-    var description: String {
+    public var description: String {
         return "Template(#children=\(children.count))"
     }
 }

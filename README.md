@@ -80,3 +80,48 @@ gysb command search `gysb.json` for each gysb template files within same or ance
 - local library script inclusion. See example in `TestExample/simple_include`.
 - external library via SwiftPM package. See example in `TestExample/yaml`.
 
+# install
+
+There are some install approachs.
+
+1. build yourself and set path
+
+## build yourself
+
+Checkout repository.
+
+```
+$ git clone https://github.com/omochi/gysb.git
+$ cd gysb
+```
+
+Build.
+
+```
+$ swift build
+```
+
+Get path.
+
+```
+$ echo $(pwd)/.build/debug
+/Users/omochi/github/omochi/gysb/.build/debug
+```
+
+Set path.
+
+```
+$ vim ~/.bash_profile
+```
+
+# development
+
+This repository is maintained by SwiftPM.
+
+Use xcodeproj and work with it.
+
+```
+$ swift package generate-xcodeproj
+$ open gysb.xcodeproj
+```
+

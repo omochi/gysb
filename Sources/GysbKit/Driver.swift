@@ -18,8 +18,13 @@ class Driver {
             
             var source: String?
             var template: Template?
+            
+            // macro result
             var swiftConfig: URL?
-            var codeID: String?
+            
+            var code: String?
+            
+            var targetName: String?
             var rendered: String?
             
             init(path: URL) {
@@ -28,9 +33,12 @@ class Driver {
         }
         
         var writeOnSame: Bool = false
+        var logPrintEnabled: Bool = false
+        
         var entries: [Entry] = []
-        var code: String?
         var workDir: URL?
+        
+        // using value
         var swiftConfig: Config?
 
         func resultString(index: Int, stage: Stage) -> String {
@@ -38,7 +46,7 @@ class Driver {
             case .parse, .macro:
                 return entries[index].template!.print()
             case .compile:
-                return code!
+                return entries[index].code!
             case .render:
                 return entries[index].rendered!
             }
@@ -71,11 +79,16 @@ class Driver {
         self.state = state
     }
     
-    convenience init(path: String) {
+    convenience init(path: URL) {
+        self.init(paths: [path], writeOnSame: false)
+    }
+    
+    convenience init(paths: [URL], writeOnSame: Bool) {
         let state = State.init()
-        state.entries = [
-            State.Entry.init(path: URL.init(fileURLWithPath: path))
-        ]
+        state.entries = paths.map {
+            State.Entry.init(path: $0)
+        }
+        state.writeOnSame = writeOnSame
         self.init(state: state)
     }
     
@@ -84,6 +97,7 @@ class Driver {
             guard stage == .render else {
                 throw Error(message: "`--write` requires `--render` mode")
             }
+            state.logPrintEnabled = true
             
             for i in 0..<state.entries.count {
                 let path = state.entries[i].path
@@ -100,7 +114,7 @@ class Driver {
             for i in 0..<state.entries.count {
                 let dest = state.entries[i].destPath!
                 let ret = state.entries[i].rendered!
-                print("write: \(dest.path)")
+                log("write: \(dest.path)")
                 try ret.write(to: dest, atomically: true, encoding: .utf8)
             }
         } else {
@@ -125,6 +139,25 @@ class Driver {
     }
     
     private func process(to stage: Stage) throws {
+        try processParseStage()
+        if stage == .parse {
+            return
+        }
+        
+        try processMacroStage()
+        if stage == .macro {
+            return
+        }
+        
+        try processCompileStage()
+        if stage == .compile {
+            return
+        }
+        
+        try processRenderStage()
+    }
+    
+    private func processParseStage() throws {
         for i in 0..<state.entries.count {
             let path = state.entries[i].path
             
@@ -139,32 +172,35 @@ class Driver {
             state.entries[i].template = template
             state.entries[i].source = nil
         }
-        
-        if stage == .parse {
-            return
-        }
-        
+    }
+    
+    private func processMacroStage() throws {
         for i in 0..<state.entries.count {
             try MacroProcessor.init(state: state, index: i).execute()
         }
+
+    }
+    
+    private func processCompileStage() throws {
+        let workDirName: String
+        
         let swiftConfigs = state.entries.flatMap { $0.swiftConfig }
         if swiftConfigs.count >= 2 {
             throw Error(message: "swiftpm definition must be in only one source")
         }
-        if stage == .macro {
-            return
-        }
-        
-        let workDirName: String
         
         if let configPath = swiftConfigs.first {
+            // workspace is bound to swift config json filepath
+            
             let data = try Data.init(contentsOf: configPath)
             state.swiftConfig = try JSONDecoder().decode(GysbSwiftConfig.Config.self, from: data)
-
+            
             let str = getSha256(string: configPath.path).slice(start: 0, len: 16)
             workDirName = "gysb_" + str
         } else {
             state.swiftConfig = GysbSwiftConfig.Config()
+            
+            // workspace is bound to one source filepath
             
             let leaderPath = state.entries.map { $0.path.path }.sorted().first!
             let str = getSha256(string: leaderPath).slice(start: 0, len: 16)
@@ -174,28 +210,34 @@ class Driver {
         let workDir = URL.init(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(workDirName)
         try FileManager.default.createDirectory(at: workDir, withIntermediateDirectories: true)
         state.workDir = workDir
+        log("workDir: \(workDir.path)")
         
         for i in 0..<state.entries.count {
-            state.entries[i].codeID = "id\(i)"
+            let codeGenerator = CodeGenerator(state: state, index: i)
+            let code = codeGenerator.generate()
+            state.entries[i].code = code
         }
-        
-        let codeGenerator = CodeGenerator(state: state)
-        let code = codeGenerator.generate()
-        state.code = code
-        
-        if stage == .compile {
-            return
-        }
-        
-        let codeExecutor = CodeExecutor.init(state: state)
+    }
+    
+    private func processRenderStage() throws {
+        let codeExecutor = CodeExecutor.init(state: state, output: self.logPut)
         try codeExecutor.deploy()
         
         for i in 0..<state.entries.count {
-            let rendered = try codeExecutor.execute(id: state.entries[i].codeID!)
+            let rendered = try codeExecutor.execute(index: i)
             state.entries[i].rendered = rendered
         }
     }
     
+    private func log(_ s: String) {
+        logPut(s + "\n")
+    }
+    
+    private func logPut(_ s: String) {
+        if state.logPrintEnabled {
+            print(s, terminator: "")
+        }
+    }
 
     private let state: State
 }

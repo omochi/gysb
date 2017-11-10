@@ -8,41 +8,58 @@
 import Foundation
 
 public struct ExecError : Swift.Error, CustomStringConvertible {
-    public var path: String
+    public init(path: URL,
+                arguments: [String],
+                statusCode: Int32,
+                output: String?)
+    {
+        self.path = path
+        self.arguments = arguments
+        self.statusCode = statusCode
+        self.output = output
+    }
+    
+    public var path: URL
     public var arguments: [String]
     public var statusCode: Int32
-    public var output: String
+    public var output: String?
     
     public var description: String {
         var ls = [
             "process execution failure",
-            "path=[\(path)]"
+            "path=[\(path.path)]"
             ]
         ls += arguments.enumerated().map { (i, arg) in
             "arg[\(i)]=[\(arg)]" }
         ls += [
-            "statusCode=[\(statusCode)]",
-            "output=",
-            output,
-            ""]
+            "statusCode=[\(statusCode)]" ]
+        
+        if let output = self.output {
+            ls += [
+                "output=",
+                output]
+        }
+        
+        ls += [""]
 
         return ls.joined(separator: "\n")
     }
 }
 
-@discardableResult
-public func execCapture(path: URL,
-                        arguments: [String]) throws -> String
+public func execRaw(path: URL,
+                    arguments: [String],
+                    stdout: @escaping (Data) -> Void,
+                    stderr: @escaping (Data) -> Void)
+    throws -> Int32
 {
     let stdoutPipe = Pipe()
-    var outputData = Data()
     stdoutPipe.fileHandleForReading.readabilityHandler = { file in
-        outputData.append(file.availableData)
+        stdout(file.availableData)
     }
     
     let stderrPipe = Pipe()
     stderrPipe.fileHandleForReading.readabilityHandler = { file in
-        outputData.append(file.availableData)
+        stderr(file.availableData)
     }
     
     let process = Process()
@@ -56,15 +73,26 @@ public func execCapture(path: URL,
     stdoutPipe.fileHandleForReading.readabilityHandler = nil
     stderrPipe.fileHandleForReading.readabilityHandler = nil
     
-    // TODO: robust decoding to prevent failure always
-    guard let outputStr = String.init(data: outputData, encoding: .utf8) else {
-        throw Error(message: "output data decode failed")
-    }
+    return process.terminationStatus
+}
+
+@discardableResult
+public func execCapture(path: URL,
+                        arguments: [String]) throws -> String
+{
+    var outputData = Data()
     
-    if process.terminationStatus != EXIT_SUCCESS {
-        throw ExecError(path: path.path,
+    let st = try execRaw(path: path,
+                         arguments: arguments,
+                         stdout: { outputData.append($0) },
+                         stderr: { outputData.append($0) })
+    
+    let outputStr = decodeString(data: outputData, coding: .utf8)
+    
+    if st != EXIT_SUCCESS {
+        throw ExecError(path: path,
                         arguments: arguments,
-                        statusCode: process.terminationStatus,
+                        statusCode: st,
                         output: outputStr)
     }
     
@@ -76,5 +104,32 @@ public func execWhich(name: String) throws -> URL {
                                arguments: [name])
     path = path.replacingOccurrences(of: "\\s+$", with: "", options: .regularExpression)
     return URL.init(fileURLWithPath: path)
+}
+
+public func execPrintOrCapture(path: URL,
+                               arguments: [String],
+                               print: ((String) -> Void)?)
+    throws
+{
+    let status: Int32
+    var output: String?
+    
+    if let print = print {
+        status = try execRaw(path: path, arguments: arguments,
+                             stdout: { print(decodeString(data: $0, coding: .utf8)) },
+                             stderr: { print(decodeString(data: $0, coding: .utf8)) })
+
+    } else {
+        output = ""
+        status = try execRaw(path: path, arguments: arguments,
+                             stdout: { output!.append(decodeString(data: $0, coding: .utf8)) },
+                             stderr: { output!.append(decodeString(data: $0, coding: .utf8)) })
+
+    }
+    
+    if status != EXIT_SUCCESS {
+        throw ExecError(path: path, arguments: arguments,
+                        statusCode: status, output: output)
+    }
 }
 

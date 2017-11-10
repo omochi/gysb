@@ -84,6 +84,16 @@ public func getSwiftcPath() throws -> URL {
 }
 private var swiftcPath: URL?
 
+// TODO: need robust way
+public func decodeString(data: Data, coding: String.Encoding) -> String {
+    return String.init(data: data, encoding: coding)!
+}
 
-
-
+public func changeCurrentDirectory(path: URL) -> () -> Void {
+    let fm = FileManager.default
+    let ocd: String = fm.currentDirectoryPath
+    fm.changeCurrentDirectoryPath(path.path)
+    return {
+        fm.changeCurrentDirectoryPath(ocd)
+    }
+}

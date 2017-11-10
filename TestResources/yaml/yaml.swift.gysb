@@ -8,12 +8,6 @@
 	let yaml = try Yams.compose(yaml: yamlStr)!
 	let fields: [String] = yaml.array().map { $0.string! }
 }%
-/*
-this code is generated from YAML
-path: ${yamlPath.path}
-content:
-${yamlStr}
-*/
 struct Data {
 	% for field in fields {
 	var ${field}: String

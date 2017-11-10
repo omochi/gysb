@@ -9,18 +9,21 @@ import Foundation
 import GysbBase
 
 public class ManifestoGenerator {
-    public init(config: Config, name: String) {
+    public init(config: Config, targetNames: [String]) {
         self.config = config
-        self.name = name
+        self.targetNames = targetNames
     }
     
     public func generate() -> String {
+        
+        let packageName = "GysbRender"
+        
         write("// swift-tools-version:4.0")
         write("")
         write("import PackageDescription")
         write("")
         write("let package = Package(")
-        write("    name: \"\(self.name)\",")
+        write("    name: \"\(packageName)\",")
         write("    dependencies: [")
         
         for (i, pd) in config.packageDependencies.enumerated() {
@@ -40,18 +43,23 @@ public class ManifestoGenerator {
         write("    ],")
         write("    targets: [")
         
-        write("        .target(name: \"\(self.name)\",")
-        write("                dependencies: [")
-        
-        for (i, td) in config.targetDependencies.enumerated() {
-            let last = i + 1 == config.targetDependencies.count
+        for (i, targetName) in self.targetNames.enumerated() {
+            let last = i + 1 == self.targetNames.count
             let comma = last ? "" : ","
             
-            write("                    \"\(td.name)\"\(comma)")
+            write("        .target(name: \"\(targetName)\",")
+            write("                dependencies: [")
+            
+            for (i, td) in config.targetDependencies.enumerated() {
+                let last = i + 1 == config.targetDependencies.count
+                let comma = last ? "" : ","
+                
+                write("                    \"\(td.name)\"\(comma)")
+            }
+            
+            write("                ]")
+            write("                )\(comma)")
         }
-        
-        write("                ]")
-        write("                )")
         
         write("    ]")
         write(")\n")
@@ -65,5 +73,5 @@ public class ManifestoGenerator {
     
     private var output: String = ""
     private let config: Config
-    private let name: String
+    private let targetNames: [String]
 }

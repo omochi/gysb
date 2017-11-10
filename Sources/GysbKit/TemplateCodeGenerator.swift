@@ -37,11 +37,12 @@ class TemplateCodeGenerator {
             template.children.forEach { child in
                 process(child)
             }
+            emit("\n")
         }
     }
     
     private func emit(_ code: String) {
-        _emit("    " + code)
+        _emit(code)
     }
     
     private let template: Template

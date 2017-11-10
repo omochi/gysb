@@ -8,28 +8,23 @@
 import Foundation
 
 public func glob(pattern: String, in directory: URL?) -> [URL] {
-    let fm = FileManager.default
+    let cdBack = directory.map { changeCurrentDirectory(path: $0) }
+    defer { cdBack?() }
     
-    let ocd = fm.currentDirectoryPath
     var ret = [URL]()
-    
-    let directory: URL = directory ?? URL.init(fileURLWithPath: fm.currentDirectoryPath)
-
-    fm.changeCurrentDirectoryPath(directory.path)
     
     var obj = glob_t.init()
     defer {
         globfree(&obj)
-        fm.changeCurrentDirectoryPath(ocd)
     }
     
     Darwin.glob(pattern.cString(using: .utf8),
                 GLOB_TILDE | GLOB_MARK | GLOB_BRACE,
                 nil, &obj)
     for i in 0..<obj.gl_matchc {
-        let path = String.init(cString: obj.gl_pathv[Int(i)]!)
-        ret.append(resolvePath(URL.init(fileURLWithPath: path),
-                               in: directory))
+        let pathStr = String.init(cString: obj.gl_pathv[Int(i)]!)
+        let path = URL.init(fileURLWithPath: pathStr)
+        ret.append(path)
     }
     
     return ret

@@ -1,0 +1,6 @@
+{
+	"includes": [
+		"a/*.swift",
+		"b/*.swift"
+	]
+}

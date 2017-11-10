@@ -109,7 +109,7 @@ class MacroProcessor {
     private func includeCode(path pattern: String) throws -> [CodeNode] {
         var ret = [CodeNode]()
         
-        for path in glob(pattern: pattern, in: basePath) {
+        for path in try glob(pattern: pattern, in: basePath) {
             let code = try String.init(contentsOf: path, encoding: .utf8) + "\n"
             ret.append(CodeNode(code: code))
         }

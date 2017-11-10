@@ -97,3 +97,11 @@ public func changeCurrentDirectory(path: URL) -> () -> Void {
         fm.changeCurrentDirectoryPath(ocd)
     }
 }
+
+public extension FileManager {
+    func isDirectory(atPath path: String) -> Bool {
+        var isDir: ObjCBool = false
+        let path = URL.init(fileURLWithPath: path).path
+        return fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue
+    }
+}

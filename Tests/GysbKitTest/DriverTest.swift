@@ -3,7 +3,7 @@ import XCTest
 import Foundation
 class DriverTest: XCTestCase {
     func testSimple1() throws {
-        let testDir = URL.init(fileURLWithPath: "TestResources/simple1")
+        let testDir = URL.init(fileURLWithPath: "Examples/simple1")
         let driver = Driver.init(path: testDir.appendingPathComponent("a.txt.gysb"))
         let actual = try driver.render(to: .render)
         
@@ -12,7 +12,7 @@ class DriverTest: XCTestCase {
     }
     
     func testSimple1Write() throws {
-        let testDir = URL.init(fileURLWithPath: "TestResources/simple1")
+        let testDir = URL.init(fileURLWithPath: "Examples/simple1")
         let driver = Driver.init(paths: [testDir.appendingPathComponent("a.txt.gysb")], writeOnSame: true)
         try driver.run(to: .render)
         
@@ -22,7 +22,7 @@ class DriverTest: XCTestCase {
     }
     
     func testSimple2() throws {
-        let testDir = URL.init(fileURLWithPath: "TestResources/simple2")
+        let testDir = URL.init(fileURLWithPath: "Examples/simple2")
         let driver = Driver.init(paths: [testDir.appendingPathComponent("b.swift.gysb")], writeOnSame: true)
         try driver.run(to: .render)
         
@@ -32,7 +32,7 @@ class DriverTest: XCTestCase {
     }
     
     func testVector() throws {
-        let testDir = URL.init(fileURLWithPath: "TestResources/vector")
+        let testDir = URL.init(fileURLWithPath: "Examples/vector")
         let driver = Driver.init(path: testDir.appendingPathComponent("vector.swift.gysb"))
         let actual = try driver.render(to: .render)
         
@@ -41,7 +41,7 @@ class DriverTest: XCTestCase {
     }
     
     func testVectorWrite() throws {
-        let testDir = URL.init(fileURLWithPath: "TestResources/vector")
+        let testDir = URL.init(fileURLWithPath: "Examples/vector")
         let driver = Driver.init(paths: [testDir.appendingPathComponent("vector.swift.gysb")],
                                  writeOnSame: true)
         try driver.run(to: .render)
@@ -52,7 +52,29 @@ class DriverTest: XCTestCase {
     }
     
     func testSimpleInclude() throws {
-        let testDir = URL.init(fileURLWithPath: "TestResources/simple_include")
+        let testDir = URL.init(fileURLWithPath: "Examples/simple_include")
+        let driver = Driver.init(paths: [testDir.appendingPathComponent("include.swift.gysb")],
+                                 writeOnSame: true)
+        try driver.run(to: .render)
+        
+        let actual = try String.init(contentsOf: testDir.appendingPathComponent("include.swift"), encoding: .utf8)
+        let expected = try String.init(contentsOf: testDir.appendingPathComponent("include_expected.swift"), encoding: .utf8)
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testSameNameInclude() throws {
+        let testDir = URL.init(fileURLWithPath: "Examples/same_name_include")
+        let driver = Driver.init(paths: [testDir.appendingPathComponent("include.swift.gysb")],
+                                 writeOnSame: true)
+        try driver.run(to: .render)
+        
+        let actual = try String.init(contentsOf: testDir.appendingPathComponent("include.swift"), encoding: .utf8)
+        let expected = try String.init(contentsOf: testDir.appendingPathComponent("include_expected.swift"), encoding: .utf8)
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testRecursiveInclude() throws {
+        let testDir = URL.init(fileURLWithPath: "Examples/recursive_include")
         let driver = Driver.init(paths: [testDir.appendingPathComponent("include.swift.gysb")],
                                  writeOnSame: true)
         try driver.run(to: .render)
@@ -63,7 +85,7 @@ class DriverTest: XCTestCase {
     }
     
     func testYaml() throws {
-        let testDir = URL.init(fileURLWithPath: "TestResources/yaml")
+        let testDir = URL.init(fileURLWithPath: "Examples/yaml")
         let driver = Driver.init(paths: [testDir.appendingPathComponent("yaml.swift.gysb")],
                                  writeOnSame: true)
         try driver.run(to: .render)
@@ -74,7 +96,7 @@ class DriverTest: XCTestCase {
     }
     
     func testSharedConfig() throws {
-        let testDir = URL.init(fileURLWithPath: "TestResources/yaml")
+        let testDir = URL.init(fileURLWithPath: "Examples/yaml")
         let driver = Driver.init(paths: [testDir.appendingPathComponent("yaml.swift.gysb"),
                                          testDir.appendingPathComponent("yaml2.swift.gysb")],
                                  writeOnSame: true)
@@ -90,7 +112,7 @@ class DriverTest: XCTestCase {
     }
     
     func testMultipleConfigGroup() throws {
-        let testDir = URL.init(fileURLWithPath: "TestResources")
+        let testDir = URL.init(fileURLWithPath: "Examples")
         let driver = Driver.init(paths: [
             testDir.appendingPathComponent("simple1/a.txt.gysb"),
             testDir.appendingPathComponent("simple2/b.swift.gysb"),

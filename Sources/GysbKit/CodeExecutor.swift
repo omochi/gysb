@@ -42,11 +42,20 @@ class CodeExecutor {
             let targetDir = buildWork.workDir
                 .appendingPathComponent("Sources")
                 .appendingPathComponent(state.includeFilesTargetName)
+            try? fm.removeItem(at: targetDir)
             try fm.createDirectory(at: targetDir, withIntermediateDirectories: true)
             
             for includeFile in includeFiles {
                 let fileName = includeFile.lastPathComponent
-                let destPath = targetDir.appendingPathComponent(fileName)
+                
+                let destSuffix = getSha256(string: includeFile.path).slice(start: 0, len: 16)
+                let ext = (fileName as NSString).pathExtension
+                
+                var destFileName = (fileName as NSString).deletingPathExtension
+                destFileName = destFileName + "_" + destSuffix
+                destFileName = (destFileName as NSString).appendingPathExtension(ext)!
+                
+                let destPath = targetDir.appendingPathComponent(destFileName)
                 
                 try? fm.removeItem(at: destPath)
                 try fm.copyItem(at: includeFile, to: destPath)

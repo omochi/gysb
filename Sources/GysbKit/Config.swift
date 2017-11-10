@@ -45,15 +45,15 @@ public extension Config {
         self.includes = try kc.decodeIfPresent([String].self, forKey: .includes) ?? []
     }
     
-    public mutating func updateIncludePaths() {
+    public mutating func updateIncludePaths() throws {
         guard let configPath = configPath else {
             self.includesFiles = []
             return
         }
         
         let dir = configPath.deletingLastPathComponent()
-        let paths: [URL] = includes.flatMap { (include: String) -> [URL] in
-            glob(pattern: include, in: dir)
+        let paths: [URL] = try includes.flatMap { (include: String) -> [URL] in
+            try glob(pattern: include, in: dir)
         }
         self.includesFiles = paths
     }
@@ -62,7 +62,7 @@ public extension Config {
         let data = try Data.init(contentsOf: path)
         var config = try JSONDecoder().decode(Config.self, from: data)
         config.configPath = path
-        config.updateIncludePaths()
+        try config.updateIncludePaths()
         return config
     }
 }

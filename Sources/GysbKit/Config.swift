@@ -21,8 +21,30 @@ public struct Config : Decodable {
     }
     
     public init() {}
-    public var packageDependencies: [PackageDependency] = []
-    public var targetDependencies: [TargetDependency] = []
+    public var packageDependencies: [PackageDependency] {
+        get {
+            return _packageDependencies ?? []
+        }
+        set {
+            _packageDependencies = newValue
+        }
+    }
+    public var targetDependencies: [TargetDependency] {
+        get {
+            return _targetDependencies ?? []
+        }
+        set {
+            _targetDependencies = newValue
+        }
+    }
+    
+    private var _packageDependencies: [PackageDependency]?
+    private var _targetDependencies: [TargetDependency]?
+    
+    public enum CodingKeys : String, CodingKey {
+        case _packageDependencies = "packageDependencies"
+        case _targetDependencies = "targetDependencies"
+    }
 }
 
 public extension Config {

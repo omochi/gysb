@@ -69,35 +69,14 @@ Usage: .build/x86_64-apple-macosx10.10/debug/gysb [mode] path
 - `%{` code `%}`: code block
 - `% code`: code line
 - `${` code `}`: code substitution
-- `%!`: template macro invocation
 
-## macro
+# gysb.json
 
-- include_code(path): include code here. path: glob pattern.
+You can use more useful feature of gysb by using `gysb.json`.
+gysb command search `gysb.json` for each gysb template files within same or ancestor directory.
 
-### example
+## gysb.json features
 
-```
-[omochi@omochi-iMac gysb (master +=)]$ ls Examples/libs
-func_aaa.swift func_bbb.swift
-[omochi@omochi-iMac gysb (master *+=)]$ cat Examples/libs/func_aaa.swift 
-func aaa() -> Int {
-    return 999
-}
-[omochi@omochi-iMac gysb (master *+=)]$ cat Examples/libs/func_bbb.swift 
-func bbb() -> Int {
-    return 777
-}
-[omochi@omochi-iMac gysb (master *+=)]$ cat Examples/include.swift.gysb 
-%! include_code("libs/*.swift")
-%
-aaa=${aaa()}
-bbb=${bbb()}
-[omochi@omochi-iMac gysb (master *+=)]$ swift run gysb Examples/include.swift.gysb 
-aaa=999
-bbb=777
-```
-
-
-
+- local library script inclusion. See example in `TestExample/simple_include`.
+- external library via SwiftPM package. See example in `TestExample/yaml`.
 

@@ -7,7 +7,7 @@ Swift implementation of [swift/gyb](https://github.com/apple/swift/blob/master/u
 # example
 
 ```
-$ cat Examples/a.txt.gysb 
+$ cat TestResources/simple1/a.txt.gysb 
 Hello 100%%
 %{
     let y = 10
@@ -28,7 +28,7 @@ y is less than or equal to seven
 % }
 
 The End.
-$ swift run gysb Resources/a.txt.gysb 
+$ swift run gysb TestResources/simple1/a.txt.gysb 
 Hello 100%
 
 I can assure you that 42 < 43
@@ -39,6 +39,10 @@ y is greater than seven!
 
 The End.
 ```
+
+## other examples
+
+See `Test` and `TestResources`.
 
 # docs
 

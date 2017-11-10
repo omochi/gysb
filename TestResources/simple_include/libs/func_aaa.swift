@@ -1,3 +1,3 @@
-func aaa() -> Int {
+public func aaa() -> Int {
 	return 999
 }

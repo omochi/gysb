@@ -8,12 +8,20 @@
 import Foundation
 
 class CodeGenerator {
-    init(state: Driver.State, index: Int) {
+    init(state: Driver.State, entryIndex: Int) {
         self.state = state
-        self.stateIndex = index
+        self.entryIndex = entryIndex
     }
     
     func generate() -> String {
+        if buildWork.config.includesFiles.count > 0 {
+            emit("""
+                import \(state.includeFilesTargetName)
+                
+                
+                """)
+        }
+        
         emit("""
             var gysb_result: String = ""
 
@@ -24,7 +32,7 @@ class CodeGenerator {
             """)
         emit("\n")
         
-        let template = self.state.entries[self.stateIndex].template!
+        let template = entry.template!
         
         let tcg = TemplateCodeGenerator(template: template, emit: self.emit)
         tcg.generate()
@@ -43,7 +51,24 @@ class CodeGenerator {
     }
     
     private var code: String = ""
-    
+    private var entry: Driver.State.Entry {
+        get {
+            return state.entries[entryIndex]
+        }
+        set {
+            state.entries[entryIndex] = newValue
+        }
+    }
+    private var buildWork: Driver.State.BuildWork {
+        get {
+            let iw = state.buildWorkIndexForEntry(index: entryIndex)!
+            return state.buildWorks[iw]
+        }
+        set {
+            let iw = state.buildWorkIndexForEntry(index: entryIndex)!
+            state.buildWorks[iw] = newValue
+        }
+    }
     private let state: Driver.State
-    private let stateIndex: Int
+    private let entryIndex: Int
 }

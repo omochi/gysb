@@ -1,4 +1,5 @@
 import Foundation
+import GysbBase
 
 public struct Config : Decodable {
     public struct PackageDependency : Decodable {
@@ -21,35 +22,47 @@ public struct Config : Decodable {
     }
     
     public init() {}
-    public var packageDependencies: [PackageDependency] {
-        get {
-            return _packageDependencies ?? []
-        }
-        set {
-            _packageDependencies = newValue
-        }
-    }
-    public var targetDependencies: [TargetDependency] {
-        get {
-            return _targetDependencies ?? []
-        }
-        set {
-            _targetDependencies = newValue
-        }
-    }
     
-    private var _packageDependencies: [PackageDependency]?
-    private var _targetDependencies: [TargetDependency]?
+    public var configPath: URL? = nil
+    public var packageDependencies: [PackageDependency] = []
+    public var targetDependencies: [TargetDependency] = []
+    public var includes: [String] = []
+    
+    public var includesFiles: [URL] = []
     
     public enum CodingKeys : String, CodingKey {
-        case _packageDependencies = "packageDependencies"
-        case _targetDependencies = "targetDependencies"
+        case packageDependencies
+        case targetDependencies
+        case includes
     }
 }
 
 public extension Config {
+    public init(from decoder: Decoder) throws {
+        let kc = try decoder.container(keyedBy: CodingKeys.self)
+        self.packageDependencies = try kc.decodeIfPresent([PackageDependency].self, forKey: .packageDependencies) ?? []
+        self.targetDependencies = try kc.decodeIfPresent([TargetDependency].self, forKey: .targetDependencies) ?? []
+        self.includes = try kc.decodeIfPresent([String].self, forKey: .includes) ?? []
+    }
+    
+    public mutating func updateIncludePaths() {
+        guard let configPath = configPath else {
+            self.includesFiles = []
+            return
+        }
+        
+        let dir = configPath.deletingLastPathComponent()
+        let paths: [URL] = includes.flatMap { (include: String) -> [URL] in
+            glob(pattern: include, in: dir)
+        }
+        self.includesFiles = paths
+    }
+
     public static func fromJSON(path: URL) throws -> Config {
         let data = try Data.init(contentsOf: path)
-        return try JSONDecoder().decode(Config.self, from: data)
+        var config = try JSONDecoder().decode(Config.self, from: data)
+        config.configPath = path
+        config.updateIncludePaths()
+        return config
     }
 }

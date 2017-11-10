@@ -22,6 +22,12 @@ extension Driver.State {
     func targetName(index: Int) -> String {
         return "render\(index)"
     }
+    
+    func buildWorkIndexForEntry(index: Int) -> Int? {
+        return buildWorks.index { work in
+            work.entryIndices.contains(index)
+        }
+    }
 }
 
 extension Driver.State.BuildWork {

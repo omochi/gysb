@@ -1,3 +1,3 @@
-func bbb() -> Int {
+public func bbb() -> Int {
 	return 777
 }

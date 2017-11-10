@@ -9,13 +9,18 @@ import Foundation
 import GysbBase
 
 public class SPMManifestoGenerator {
-    public init(config: Config, targetNames: [String]) {
+    public init(config: Config,
+                targetNames: [String],
+                includeFilesTargetName: String,
+                hasIncludeFiles: Bool)
+    {
         self.config = config
         self.targetNames = targetNames
+        self.includeFilesTargetName = includeFilesTargetName
+        self.hasIncludeFiles = hasIncludeFiles
     }
     
     public func generate() -> String {
-        
         let packageName = "GysbRender"
         
         write("// swift-tools-version:4.0")
@@ -43,22 +48,47 @@ public class SPMManifestoGenerator {
         write("    ],")
         write("    targets: [")
         
-        for (i, targetName) in self.targetNames.enumerated() {
-            let last = i + 1 == self.targetNames.count
-            let comma = last ? "" : ","
+        let commonDepDefs: [String] = config.targetDependencies
+            .map { td in
+                "                \"\(td.name)\""
+            }
+        var templateDepDefs: [String] = commonDepDefs
+        if hasIncludeFiles {
+            templateDepDefs.append("                \"\(includeFilesTargetName)\"")
+        }
+        
+        var targetDefs: [String] = self.targetNames.map { targetName -> String in
+            var ls: [String] = []
+            ls.append("        .target(")
+            ls.append("            name: \"\(targetName)\",")
+            ls.append("            dependencies: [")
             
-            write("        .target(name: \"\(targetName)\",")
-            write("                dependencies: [")
-            
-            for (i, td) in config.targetDependencies.enumerated() {
-                let last = i + 1 == config.targetDependencies.count
-                let comma = last ? "" : ","
-                
-                write("                    \"\(td.name)\"\(comma)")
+            if templateDepDefs.count > 0 {
+                ls.append(templateDepDefs.joined(separator: ",\n"))
             }
             
-            write("                ]")
-            write("                )\(comma)")
+            ls.append("            ]")
+            ls.append("        )")
+            return ls.joined(separator: "\n")
+        }
+        if hasIncludeFiles {
+            var ls = [String]()
+            ls.append("        .target(")
+            ls.append("            name: \"\(includeFilesTargetName)\",")
+            ls.append("            dependencies: [")
+
+            if commonDepDefs.count > 0 {
+                ls.append(commonDepDefs.joined(separator: ",\n"))
+            }
+            
+            ls.append("            ]")
+            ls.append("        )")
+            targetDefs.append(ls.joined(separator: "\n"))
+        }
+        
+        let targetDefsStr = targetDefs.joined(separator: ",\n")
+        if !targetDefsStr.isEmpty {
+            write(targetDefsStr)
         }
         
         write("    ]")
@@ -74,4 +104,6 @@ public class SPMManifestoGenerator {
     private var output: String = ""
     private let config: Config
     private let targetNames: [String]
+    private let includeFilesTargetName: String
+    private let hasIncludeFiles: Bool
 }

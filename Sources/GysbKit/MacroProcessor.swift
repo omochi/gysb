@@ -88,14 +88,14 @@ class MacroProcessor {
     }
     
     private func evalMacroNode(_ macro: MacroNode) throws -> [AnyASTNode] {
-        var ret = [AnyASTNode]()
+        let ret = [AnyASTNode]()
         let ipr = Interpreter(source: macro.code)
         
-        ipr.registerFunction(name: "include_code") { (path: String) -> Void in
-            let codes = try self.includeCode(path: path)
-            ret.append(contentsOf: codes.map { AnyASTNode($0) })
-            return ()
-        }
+//        ipr.registerFunction(name: "include_code") { (path: String) -> Void in
+//            let codes = try self.includeCode(path: path)
+//            ret.append(contentsOf: codes.map { AnyASTNode($0) })
+//            return ()
+//        }
 
 //        ipr.registerFunction(name: "swift_config") { (path: String) -> Void in
 //            let path = resolvePath(URL.init(fileURLWithPath: path), in: self.basePath)

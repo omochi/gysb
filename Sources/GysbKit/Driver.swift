@@ -41,6 +41,8 @@ class Driver {
         
         var entries: [Entry] = []
         var buildWorks: [BuildWork] = []
+        
+        let includeFilesTargetName: String = "gysb_include_files"
     }
     
     enum Stage {
@@ -176,13 +178,6 @@ class Driver {
     private func processCompileStage() throws {
         let fm = FileManager.default
         
-        for i in 0..<state.entries.count {
-            let codeGenerator = CodeGenerator(state: state, index: i)
-            let code = codeGenerator.generate()
-            state.entries[i].code = code
-            state.entries[i].template = nil
-        }
-        
         var configPathToIndices = [String: [Int]]()
         var noConfigIndices = [Int]()
         
@@ -200,7 +195,8 @@ class Driver {
         
         func createWorkDir(suffix: String) throws -> URL {
             let workDir = URL(fileURLWithPath: NSTemporaryDirectory())
-                .appendingPathComponent("gysb_" + suffix)
+                .appendingPathComponent("gysb")
+                .appendingPathComponent("swiftpm_" + suffix)
             try fm.createDirectory(at: workDir, withIntermediateDirectories: true)
             return workDir
         }
@@ -235,6 +231,13 @@ class Driver {
                                        workDir: workDir,
                                        entryIndices: noConfigIndices)
             state.buildWorks.append(work)
+        }
+        
+        for i in 0..<state.entries.count {
+            let codeGenerator = CodeGenerator(state: state, entryIndex: i)
+            let code = codeGenerator.generate()
+            state.entries[i].code = code
+            state.entries[i].template = nil
         }
     }
     

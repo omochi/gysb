@@ -14,33 +14,51 @@ class CodeExecutor {
     func deploy() throws {
         let fm = FileManager.default
         
-        let buildWork = state.buildWorks[workIndex]
-        
-        self.spmDir = buildWork.workDir.appendingPathComponent("swiftpm")
-        try fm.createDirectory(at: spmDir, withIntermediateDirectories: true)
-        
+        let includeFiles = buildWork.config.includesFiles
         let targetNames = buildWork.entryIndices.map { state.targetName(index: $0) }
         let generator = SPMManifestoGenerator(config: buildWork.config,
-                                              targetNames: targetNames)
+                                              targetNames: targetNames,
+                                              includeFilesTargetName: state.includeFilesTargetName,
+                                              hasIncludeFiles: includeFiles.count > 0)
         let manifesto = generator.generate()
-        try manifesto.write(to: spmDir.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8)
-        
+        try manifesto.write(to: buildWork.workDir
+            .appendingPathComponent("Package.swift"),
+                            atomically: true, encoding: .utf8)
+
         for i in buildWork.entryIndices {
             let targetName = state.targetName(index: i)
             let code = state.entries[i].code!
             
-            let targetDir = spmDir.appendingPathComponent("Sources").appendingPathComponent(targetName)
+            let targetDir = buildWork.workDir
+                .appendingPathComponent("Sources")
+                .appendingPathComponent(targetName)
             try fm.createDirectory(at: targetDir, withIntermediateDirectories: true)
             
             try code.write(to: targetDir.appendingPathComponent("main.swift"),
                            atomically: true, encoding: .utf8)
         }
+        
+        if includeFiles.count > 0 {
+            let targetDir = buildWork.workDir
+                .appendingPathComponent("Sources")
+                .appendingPathComponent(state.includeFilesTargetName)
+            try fm.createDirectory(at: targetDir, withIntermediateDirectories: true)
+            
+            for includeFile in includeFiles {
+                let fileName = includeFile.lastPathComponent
+                let destPath = targetDir.appendingPathComponent(fileName)
+                
+                try? fm.removeItem(at: destPath)
+                try fm.copyItem(at: includeFile, to: destPath)
+            }
+        }
+        
 
         output("swift build\n")
         
         let swiftPath = try getSwiftPath()
         let args = ["build",
-                    "--package-path", spmDir.path]
+                    "--package-path", buildWork.workDir.path]
         
         try execPrintOrCapture(path: swiftPath, arguments: args,
                                print: state.logPrintEnabled ? output : nil)        
@@ -54,15 +72,21 @@ class CodeExecutor {
         let targetName = state.targetName(index: entryIndex)
         let swiftPath = try getSwiftPath()
         let args = ["run",
-                    "--package-path", spmDir.path,
+                    "--package-path", buildWork.workDir.path,
                     targetName]
         return try execCapture(path: swiftPath,
                                arguments: args)
     }
     
-    var spmDir: URL!
-    
     private let state: Driver.State
     private let workIndex: Int
+    private var buildWork: Driver.State.BuildWork {
+        get {
+            return state.buildWorks[workIndex]
+        }
+        set {
+            state.buildWorks[workIndex] = newValue
+        }
+    }
     private let output: (String) -> Void
 }

@@ -8,23 +8,21 @@
 import Foundation
 
 import GysbBase
-import GysbSwiftConfig
 
 class Driver {
     class State {
         struct Entry {
             var path: URL
+            var configPath: URL?
+            
             var destPath: URL?
             
             var source: String?
             var template: Template?
-            
-            // macro result
-            var swiftConfig: URL?
+
             
             var code: String?
             
-            var targetName: String?
             var rendered: String?
             
             init(path: URL) {
@@ -32,25 +30,17 @@ class Driver {
             }
         }
         
+        struct BuildWork {
+            var config: Config
+            var workDir: URL
+            var entryIndices: [Int]
+        }
+        
         var writeOnSame: Bool = false
         var logPrintEnabled: Bool = false
         
         var entries: [Entry] = []
-        var workDir: URL?
-        
-        // using value
-        var swiftConfig: Config?
-
-        func resultString(index: Int, stage: Stage) -> String {
-            switch stage {
-            case .parse, .macro:
-                return entries[index].template!.print()
-            case .compile:
-                return entries[index].code!
-            case .render:
-                return entries[index].rendered!
-            }
-        }
+        var buildWorks: [BuildWork] = []
     }
     
     enum Stage {
@@ -162,9 +152,12 @@ class Driver {
             let path = state.entries[i].path
             
             let source = try String.init(contentsOf: path, encoding: .utf8)
+            let configPath = searchConfigJSON(sourcePath: path)
             
             state.entries[i].source = source
+            state.entries[i].configPath = configPath
         }
+        
         
         for i in 0..<state.entries.count {
             let source = state.entries[i].source!
@@ -178,54 +171,84 @@ class Driver {
         for i in 0..<state.entries.count {
             try MacroProcessor.init(state: state, index: i).execute()
         }
-
     }
     
     private func processCompileStage() throws {
-        let workDirName: String
-        
-        let swiftConfigs = state.entries.flatMap { $0.swiftConfig }
-        if swiftConfigs.count >= 2 {
-            throw Error(message: "swiftpm definition must be in only one source")
-        }
-        
-        if let configPath = swiftConfigs.first {
-            // workspace is bound to swift config json filepath
-            
-            let data = try Data.init(contentsOf: configPath)
-            state.swiftConfig = try JSONDecoder().decode(GysbSwiftConfig.Config.self, from: data)
-            
-            let str = getSha256(string: configPath.path).slice(start: 0, len: 16)
-            workDirName = "gysb_" + str
-        } else {
-            state.swiftConfig = GysbSwiftConfig.Config()
-            
-            // workspace is bound to one source filepath
-            
-            let leaderPath = state.entries.map { $0.path.path }.sorted().first!
-            let str = getSha256(string: leaderPath).slice(start: 0, len: 16)
-            workDirName = "gysb_" + str
-        }
-        
-        let workDir = URL.init(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(workDirName)
-        try FileManager.default.createDirectory(at: workDir, withIntermediateDirectories: true)
-        state.workDir = workDir
-        log("workDir: \(workDir.path)")
+        let fm = FileManager.default
         
         for i in 0..<state.entries.count {
             let codeGenerator = CodeGenerator(state: state, index: i)
             let code = codeGenerator.generate()
             state.entries[i].code = code
+            state.entries[i].template = nil
+        }
+        
+        var configPathToIndices = [String: [Int]]()
+        var noConfigIndices = [Int]()
+        
+        for i in 0..<state.entries.count {
+            if let configPath = state.entries[i].configPath {
+                let key = configPath.path
+                
+                var indices = configPathToIndices[key] ?? []
+                indices.append(i)
+                configPathToIndices[key] = indices
+            } else {
+                noConfigIndices.append(i)
+            }
+        }
+        
+        func createWorkDir(suffix: String) throws -> URL {
+            let workDir = URL(fileURLWithPath: NSTemporaryDirectory())
+                .appendingPathComponent("gysb_" + suffix)
+            try fm.createDirectory(at: workDir, withIntermediateDirectories: true)
+            return workDir
+        }
+        
+        for configPathStr in configPathToIndices.keys {
+            let configPath = URL.init(fileURLWithPath: configPathStr)
+            let config = try Config.fromJSON(path: configPath)
+            
+            // workspace is bound to swift config json filepath
+            let workDirSuffix = getSha256(string: configPath.path).slice(start: 0, len: 16)
+            
+            let workDir = try createWorkDir(suffix: workDirSuffix)
+            
+            let entryIndices: [Int] = configPathToIndices[configPathStr]!
+            
+            let work = State.BuildWork(config: config,
+                                       workDir: workDir,
+                                       entryIndices: entryIndices)
+            state.buildWorks.append(work)
+        }
+        
+        if noConfigIndices.count > 0 {
+            let config = Config.init()
+            
+            // workspace is bound to one source filepath
+            
+            let leaderPath = noConfigIndices.map { state.entries[$0] }.map { $0.path.path }.sorted().first!
+            let workDirSuffix = getSha256(string: leaderPath).slice(start: 0, len: 16)
+            let workDir = try createWorkDir(suffix: workDirSuffix)
+            
+            let work = State.BuildWork(config: config,
+                                       workDir: workDir,
+                                       entryIndices: noConfigIndices)
+            state.buildWorks.append(work)
         }
     }
     
     private func processRenderStage() throws {
-        let codeExecutor = CodeExecutor.init(state: state, output: self.logPut)
-        try codeExecutor.deploy()
-        
-        for i in 0..<state.entries.count {
-            let rendered = try codeExecutor.execute(index: i)
-            state.entries[i].rendered = rendered
+        for iw in 0..<state.buildWorks.count {
+            let work = state.buildWorks[iw]
+            let executor = CodeExecutor.init(state: state, workIndex: iw, output: self.logPut)
+            log("workdir: \(work.workDir.path)")
+            try executor.deploy()
+            
+            for ie in work.entryIndices {
+                let rendered = try executor.execute(entryIndex: ie)
+                state.entries[ie].rendered = rendered
+            }
         }
     }
     
@@ -236,6 +259,23 @@ class Driver {
     private func logPut(_ s: String) {
         if state.logPrintEnabled {
             print(s, terminator: "")
+        }
+    }
+    
+    private func searchConfigJSON(sourcePath: URL) -> URL? {
+        let fm = FileManager.default
+        
+        var dir = sourcePath.deletingLastPathComponent().absoluteURL
+        
+        while true {
+            let checkPath = dir.appendingPathComponent("gysb.json")
+            if fm.fileExists(atPath: checkPath.path) {
+                return checkPath
+            }
+            if dir.pathComponents.count == 1 {
+                return nil
+            }
+            dir.deleteLastPathComponent()
         }
     }
 

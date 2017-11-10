@@ -20,12 +20,10 @@ let package = Package(
     ],
     targets: [
         .target(name: "GysbBase"),
-        .target(name: "GysbSwiftConfig",
-                dependencies: ["GysbBase"]),
         .target(name: "GysbMacroLib",
                 dependencies: ["GysbBase"]),
         .target(name: "GysbKit",
-                dependencies: ["GysbBase", "GysbSwiftConfig", "GysbMacroLib"]),
+                dependencies: ["GysbBase", "GysbMacroLib"]),
         .target(name: "gysb",
                 dependencies: ["GysbKit"]),
         .testTarget(name: "GysbKitTest",

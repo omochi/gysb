@@ -8,7 +8,7 @@
 import Foundation
 import GysbBase
 
-public class ManifestoGenerator {
+public class SPMManifestoGenerator {
     public init(config: Config, targetNames: [String]) {
         self.config = config
         self.targetNames = targetNames

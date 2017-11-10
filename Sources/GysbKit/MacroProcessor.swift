@@ -97,10 +97,10 @@ class MacroProcessor {
             return ()
         }
 
-        ipr.registerFunction(name: "swift_config") { (path: String) -> Void in
-            let path = resolvePath(URL.init(fileURLWithPath: path), in: self.basePath)
-            self.stateEntry.swiftConfig = path
-        }
+//        ipr.registerFunction(name: "swift_config") { (path: String) -> Void in
+//            let path = resolvePath(URL.init(fileURLWithPath: path), in: self.basePath)
+//            self.stateEntry.swiftConfig = path
+//        }
         
         try ipr.run()
         return ret

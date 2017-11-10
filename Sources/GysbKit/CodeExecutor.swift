@@ -89,7 +89,7 @@ public class CodeExecutor {
     
     private let state: Driver.State
     private let workIndex: Int
-    private var buildWork: Driver.State.BuildWork {
+    private var buildWork: Driver.BuildWork {
         get {
             return state.buildWorks[workIndex]
         }

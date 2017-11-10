@@ -15,16 +15,22 @@ public class App {
         case macro
         case compile
         case render
+        
+        public func toDriverStage() -> Driver.Stage {
+            switch self {
+            case .parse: return .parse
+            case .macro: return .macro
+            case .compile: return .compile
+            case .render: return .render
+            case .help:
+                fatalError("invalid")
+            }
+        }
     }
     
-    public struct Option {
-        public var mode: Mode
-        public var writeOnSame: Bool = false
-        public var paths: [URL] = []
-        
-        public init(mode: Mode) {
-            self.mode = mode
-        }
+    public enum Option {
+        case help
+        case driver(Driver.Option)
     }
     
     public init() {}
@@ -43,27 +49,21 @@ public class App {
         do {
             option = try parseCommandLine(args: CommandLine.arguments)
         } catch let e {
-            print("[Error] \(e)")
+            print("[CommandLine Error] \(e)")
             print()
             printHelp()
             return EXIT_FAILURE
         }
         
-        if option.mode == .help {
+        switch option {
+        case .help:
             printHelp()
             return EXIT_SUCCESS
+        case .driver(let opt):
+            let driver = Driver.init(option: opt)
+            try driver.run()
+            return EXIT_SUCCESS
         }
-        
-        let state = Driver.State()
-        state.writeOnSame = option.writeOnSame
-        for path in option.paths {
-            state.entries.append(.init(path: path))
-        }
-        
-        let driver = Driver.init(state: state)
-        try driver.run(to: .init(appMode: option.mode))
-        
-        return EXIT_SUCCESS
     }
     
     private func parseCommandLine(args: [String]) throws -> Option {
@@ -71,7 +71,7 @@ public class App {
         
         var mode: Mode? = nil
         var writeOnSame = false
-        var paths: [URL] = []
+        var paths: [String] = []
         
         while true {
             if index >= args.count {
@@ -111,7 +111,7 @@ public class App {
         }
         
         if mode == .help {
-            return Option(mode: .help)
+            return .help
         }
         
         if index >= args.count {
@@ -119,8 +119,7 @@ public class App {
         }
         
         for arg in args[index...] {
-            let path = URL.init(fileURLWithPath: arg)
-            paths.append(path)
+            paths.append(arg)
         }
         
         switch mode! {
@@ -140,10 +139,11 @@ public class App {
             break
         }
     
-        var option = Option(mode: mode!)
+        var option = Driver.Option()
+        option.stage = mode!.toDriverStage()
         option.writeOnSame = writeOnSame
         option.paths = paths
-        return option
+        return .driver(option)
     }
     
     private func printHelp() {
@@ -159,6 +159,7 @@ public class App {
         
         # flags
             --write: write output on same directory (extension removed)
+            --source-dirs: paths means directory and search *.gysb
         """
         print(text)
     }

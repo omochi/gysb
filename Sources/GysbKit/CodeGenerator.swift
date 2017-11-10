@@ -51,7 +51,7 @@ public class CodeGenerator {
     }
     
     private var code: String = ""
-    private var entry: Driver.State.Entry {
+    private var entry: Driver.Entry {
         get {
             return state.entries[entryIndex]
         }
@@ -59,7 +59,7 @@ public class CodeGenerator {
             state.entries[entryIndex] = newValue
         }
     }
-    private var buildWork: Driver.State.BuildWork {
+    private var buildWork: Driver.BuildWork {
         get {
             let iw = state.buildWorkIndexForEntry(index: entryIndex)!
             return state.buildWorks[iw]

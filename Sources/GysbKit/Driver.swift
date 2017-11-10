@@ -10,39 +10,47 @@ import Foundation
 import GysbBase
 
 public class Driver {
-    public class State {
-       public  struct Entry {
-            public var path: URL
-            public var configPath: URL?
-            
-            public var destPath: URL?
-            
-            public var source: String?
-            public var template: Template?
-
-            
-            public var code: String?
-            
-            public var rendered: String?
-            
-            public init(path: URL) {
-                self.path = path
-            }
-        }
-        
-        public struct BuildWork {
-            public var config: Config
-            public var workDir: URL
-            public var entryIndices: [Int]
-        }
-        
+    public struct Option {
+        public var stage: Stage = .render
         public var writeOnSame: Bool = false
+        public var sourceDirs: Bool = false
+        public var paths: [String] = []
+        
+        public init() {}
+    }
+    
+    public struct Entry {
+        public var path: URL
+        public var configPath: URL?
+        public var destPath: URL?
+        public var source: String?
+        public var template: Template?
+        public var code: String?
+        public var rendered: String?
+        
+        public init(path: URL) {
+            self.path = path
+        }
+    }
+    
+    public struct BuildWork {
+        public var config: Config
+        public var workDir: URL
+        public var entryIndices: [Int]
+    }
+        
+    public class State {
+        public var option: Option
         public var logPrintEnabled: Bool = false
         
         public var entries: [Entry] = []
         public var buildWorks: [BuildWork] = []
         
         public let includeFilesTargetName: String = "gysb_include_files"
+        
+        public init(option: Option) {
+            self.option = option
+        }
     }
     
     public enum Stage {
@@ -50,25 +58,10 @@ public class Driver {
         case macro
         case compile
         case render
-        
-        public init(appMode: App.Mode) {
-            switch appMode {
-            case .parse:
-                self = .parse
-            case .macro:
-                self = .macro
-            case .compile:
-                self = .compile
-            case .render:
-                self = .render
-            case .help:
-                fatalError("bug")
-            }
-        }
     }
     
-    public init(state: State) {
-        self.state = state
+    public init(option: Option) {
+        self.state = State(option: option)
     }
     
     public convenience init(path: URL) {
@@ -76,78 +69,85 @@ public class Driver {
     }
     
     public convenience init(paths: [URL], writeOnSame: Bool) {
-        let state = State.init()
-        state.entries = paths.map {
-            State.Entry.init(path: $0)
-        }
-        state.writeOnSame = writeOnSame
-        self.init(state: state)
+        var opt = Option()
+        opt.stage = .render
+        opt.paths = paths.map { $0.path }
+        opt.writeOnSame = writeOnSame
+
+        self.init(option: opt)
     }
     
-    public func run(to stage: Stage) throws {
-        if state.writeOnSame {
-            guard stage == .render else {
+    public func run() throws {
+        try drive()
+        
+        if state.printResult {
+            let result = state.resultString(index: 0, stage: state.option.stage)
+            print(result, terminator: "")
+        }
+    }
+    
+    public func render() throws -> String {
+        try drive()
+        return state.resultString(index: 0, stage: state.option.stage)
+    }
+    
+    private func drive() throws {
+        state.entries = state.option.paths.map { (pathStr: String) -> Entry in
+            let path = URL.init(fileURLWithPath: pathStr)
+            return Entry.init(path: path)
+        }
+        
+        if state.option.writeOnSame {
+            state.logPrintEnabled = true
+            
+            guard case .render = state.option.stage else {
                 throw Error(message: "`--write` requires `--render` mode")
             }
-            state.logPrintEnabled = true
             
             for i in 0..<state.entries.count {
                 let path = state.entries[i].path
                 if state.entries[i].destPath == nil {
                     guard path.pathExtension == "gysb" else {
-                        throw Error(message: "source path has not `.gysb`, so dest path decision failed: path=\(state.entries[i].path)")
+                        throw Error(message: "source path has not `.gysb`, so dest path decision failed: path=\(path.path)")
                     }
                     state.entries[i].destPath = path.deletingPathExtension()
                 }
             }
+        } else {
+            state.logPrintEnabled = false
             
-            try process(to: stage)
+            guard state.entries.count == 1 else {
+                throw Error(message: "entry num must be 1 to print")
+            }
+        }
 
+        try processParseStage()
+        if state.option.stage == .parse {
+            return
+        }
+        
+        try processMacroStage()
+        if state.option.stage == .macro {
+            return
+        }
+        
+        try processCompileStage()
+        if state.option.stage == .compile {
+            return
+        }
+        
+        try processRenderStage()
+        
+        if state.option.writeOnSame {
             for i in 0..<state.entries.count {
                 let dest = state.entries[i].destPath!
                 let ret = state.entries[i].rendered!
                 log("write: \(dest.path)")
                 try ret.write(to: dest, atomically: true, encoding: .utf8)
             }
-        } else {
-            let ret = try render(to: stage)
-            print(ret, terminator: "")
         }
     }
     
-    public func render(to stage: Stage) throws -> String {
-        switch stage {
-        case .parse, .macro, .render:
-            guard state.entries.count == 1 else {
-                throw Error(message: "entry count must be 1 to render")
-            }
-        case .compile:
-            break
-        }
-        
-        try process(to: stage)
-        
-        return state.resultString(index: 0, stage: stage)
-    }
-    
-    private func process(to stage: Stage) throws {
-        try processParseStage()
-        if stage == .parse {
-            return
-        }
-        
-        try processMacroStage()
-        if stage == .macro {
-            return
-        }
-        
-        try processCompileStage()
-        if stage == .compile {
-            return
-        }
-        
-        try processRenderStage()
-    }
     
     private func processParseStage() throws {
         for i in 0..<state.entries.count {
@@ -213,9 +213,9 @@ public class Driver {
             
             let entryIndices: [Int] = configPathToIndices[configPathStr]!
             
-            let work = State.BuildWork(config: config,
-                                       workDir: workDir,
-                                       entryIndices: entryIndices)
+            let work = BuildWork(config: config,
+                                 workDir: workDir,
+                                 entryIndices: entryIndices)
             state.buildWorks.append(work)
         }
         
@@ -228,9 +228,9 @@ public class Driver {
             let workDirSuffix = getSha256(string: leaderPath).slice(start: 0, len: 16)
             let workDir = try createWorkDir(suffix: workDirSuffix)
             
-            let work = State.BuildWork(config: config,
-                                       workDir: workDir,
-                                       entryIndices: noConfigIndices)
+            let work = BuildWork(config: config,
+                                 workDir: workDir,
+                                 entryIndices: noConfigIndices)
             state.buildWorks.append(work)
         }
         

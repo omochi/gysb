@@ -116,7 +116,7 @@ public class MacroProcessor {
         return ret
     }
 
-    private var stateEntry: Driver.State.Entry {
+    private var stateEntry: Driver.Entry {
         get {
             return state.entries[stateIndex]
         }

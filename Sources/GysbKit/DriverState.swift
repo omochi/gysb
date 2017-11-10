@@ -28,9 +28,13 @@ extension Driver.State {
             work.entryIndices.contains(index)
         }
     }
+    
+    public var printResult: Bool {
+        return option.writeOnSame == false
+    }
 }
 
-extension Driver.State.BuildWork {
+extension Driver.BuildWork {
 //    var 
 }
 

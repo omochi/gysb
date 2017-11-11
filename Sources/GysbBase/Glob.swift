@@ -42,7 +42,9 @@ public func expandGlobStar(pattern: String, in directory: URL?) throws -> [Strin
     
     let substSubpathStrs: [String]
     if fm.isDirectory(atPath: leadPath) {
-        substSubpathStrs = try fm.subpathsOfDirectory(atPath: URL.init(fileURLWithPath: leadPath).relativePath)
+        let path = URL.init(fileURLWithPath: leadPath).relativePath
+        substSubpathStrs = try fm.subpathsOfDirectory(atPath: path)
+        dump(substSubpathStrs)
     } else {
         substSubpathStrs = []
     }

@@ -2,6 +2,7 @@ os: linux
 language: generic
 dist: trusty
 script:
+  - swift --version
   - swift build
   - swift test
 before_install:

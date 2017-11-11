@@ -5,6 +5,11 @@ set -ue
 repo_dir="$(cd "$(dirname "$0")/.."; pwd)"
 cd "${repo_dir}"
 
+echo "@@@@ pwd"
+pwd
+echo "ls -al"
+ls -al
+
 mkdir swift_install
 cd "swift_install"
 

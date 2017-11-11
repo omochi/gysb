@@ -13,4 +13,6 @@ export PATH="$(pwd)/${swift_package_name}/usr/bin:${PATH}"
 
 cd "${repo_dir}"
 
+tree TestResources
+
 set +ue

@@ -8,3 +8,7 @@ script:
 before_install:
   - chmod ugo+x ./Scripts/travis.bash
   - source ./Scripts/travis.bash
+addons:
+  apt:
+    packages:
+      - tree

@@ -1,0 +1,9 @@
+os: linux
+language: generic
+dist: trusty
+script:
+  - swift build
+  - swift test
+before_install:
+  - chmod ugo+x ./Scripts/travis.bash
+  - source ./Scripts/travis.bash

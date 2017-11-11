@@ -28,10 +28,13 @@ class SwiftCompatTest: XCTestCase {
         }
         let dir = URL.init(fileURLWithPath: "TestResources/globstar")
         
-        let actual: [String] = try fm
-            .subpathsOfDirectory(atPath: dir.path)
+        let subpaths = try fm.subpathsOfDirectory(atPath: dir.path)
+        dump(subpaths)
+        
+        let actual: [String] = subpaths
             .filter { isDir(dir.appendingPathComponent($0).path) }
             .sorted()
+        dump(actual)
         
         let expected = [
             "a",

@@ -7,4 +7,5 @@ XCTMain([
      testCase(ParserTest.allTests),
      testCase(TokenReaderTest.allTests),
      testCase(ConfigTest.allTests),
+     testCase(NSStringTest.allTests),
 ])

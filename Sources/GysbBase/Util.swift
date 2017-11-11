@@ -109,6 +109,16 @@ extension FileManager {
     }
 }
 
+extension NSString {
+    public func appendingPathComponentCompat(_ str: String) -> String {
+        if self.length == 0 {
+            return str
+        }
+        
+        return self.appendingPathComponent(str)
+    }
+}
+
 extension NSLock {
     public func scope<R>(_ f: () throws -> R) rethrows -> R {
         lock()

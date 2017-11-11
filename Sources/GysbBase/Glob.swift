@@ -25,13 +25,13 @@ public func expandGlobStar(pattern: String, in directory: URL?) throws -> [Strin
     
     var leadPath = ""
     for i in 0..<globStarIndex {
-        leadPath = NSString(string: leadPath).appendingPathComponent(patternParts[i])
+        leadPath = NSString(string: leadPath).appendingPathComponentCompat(patternParts[i])
     }
     
     func appendTailPath(to path: String) -> String {
         var path = path
         for i in (globStarIndex + 1)..<patternParts.count {
-            path = NSString(string: path).appendingPathComponent(patternParts[i])
+            path = NSString(string: path).appendingPathComponentCompat(patternParts[i])
         }
         return path
     }
@@ -48,7 +48,7 @@ public func expandGlobStar(pattern: String, in directory: URL?) throws -> [Strin
     }
     
     let expandedPaths: [String] = substSubpathStrs
-        .map { NSString(string: leadPath).appendingPathComponent($0) }
+        .map { NSString(string: leadPath).appendingPathComponentCompat($0) }
         .filter { fm.isDirectory(atPath: $0) }
     
     for expandedPath in expandedPaths {

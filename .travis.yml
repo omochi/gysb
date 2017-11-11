@@ -1,6 +1,7 @@
 os: linux
 language: generic
 dist: trusty
+sudo: required
 script:
   - swift --version
   - swift build

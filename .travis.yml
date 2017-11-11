@@ -1,15 +1,11 @@
 os: linux
 language: generic
 dist: trusty
-sudo: required
 script:
   - swift --version
   - swift build
-  - swift test --filter SwiftCompatTest
+  - swift test
 before_install:
   - chmod ugo+x ./Scripts/travis.bash
   - source ./Scripts/travis.bash
-addons:
-  apt:
-    packages:
-      - tree
+

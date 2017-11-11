@@ -1,6 +1,9 @@
-os: linux
-language: generic
-dist: trusty
+os: osx
+language: objective-c
+osx_image: xcode9.1
+# os: linux
+# language: generic
+# dist: trusty
 script:
   - swift --version
   - swift build

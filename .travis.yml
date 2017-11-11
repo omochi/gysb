@@ -4,7 +4,7 @@ dist: trusty
 script:
   - swift --version
   - swift build
-  - swift test
+  - swift test --filter SwiftCompatTest
 before_install:
   - chmod ugo+x ./Scripts/travis.bash
   - source ./Scripts/travis.bash

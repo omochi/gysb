@@ -107,6 +107,59 @@ extension FileManager {
         let path = URL.init(fileURLWithPath: path).path
         return fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue
     }
+    
+    public func subpathsOfDirectoryCompat(atPath path: String) throws -> [String] {
+        print("[subpathsOfDirectoryCompat(\(path))] enter")
+        var contents : [String] = [String]()
+        
+        let dir = opendir(path)
+        
+        if dir == nil {
+            throw NSError(domain: NSCocoaErrorDomain, code: CocoaError.fileReadNoSuchFile.rawValue, userInfo: [NSFilePathErrorKey: path])
+        }
+        
+        defer {
+            closedir(dir!)
+        }
+        
+        var entry = readdir(dir!)
+        
+        while entry != nil {
+            let entryName = withUnsafePointer(to: &entry!.pointee.d_name) {
+                String(cString: UnsafeRawPointer($0).assumingMemoryBound(to: CChar.self))
+            }
+            print("[subpathsOfDirectoryCompat(\(path))] entryName=\(entryName)")
+
+            // TODO: `entryName` should be limited in length to `entry.memory.d_namlen`.
+            if entryName != "." && entryName != ".." {
+                contents.append(entryName)
+                
+                let entryType = withUnsafePointer(to: &entry!.pointee.d_type) { (ptr) -> Int32 in
+                    return Int32(ptr.pointee)
+                }
+                
+                print("[subpathsOfDirectoryCompat(\(path))] entryType=\(entryType) (DT_DIR=\(DT_DIR))")
+                
+                #if os(OSX) || os(iOS)
+                    let tempEntryType = entryType
+                #elseif os(Linux) || os(Android) || CYGWIN
+                    let tempEntryType = Int32(entryType)
+                #endif
+                
+                if tempEntryType == Int32(DT_DIR) {
+                    let subPath: String = path + "/" + entryName
+                    
+                    let entries =  try subpathsOfDirectoryCompat(atPath: subPath)
+                    contents.append(contentsOf: entries.map({file in "\(entryName)/\(file)"}))
+                }
+            }
+            
+            entry = readdir(dir!)
+        }
+        
+        print("[subpathsOfDirectoryCompat(\(path))] exit")
+        return contents
+    }
 }
 
 extension NSString {

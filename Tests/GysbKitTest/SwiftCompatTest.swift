@@ -28,7 +28,7 @@ class SwiftCompatTest: XCTestCase {
         }
         let dir = URL.init(fileURLWithPath: "TestResources/globstar")
         
-        let subpaths = try fm.subpathsOfDirectory(atPath: dir.path)
+        let subpaths = try fm.subpathsOfDirectoryCompat(atPath: dir.path)
         dump(subpaths)
         
         let actual: [String] = subpaths

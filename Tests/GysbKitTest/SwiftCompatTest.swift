@@ -20,44 +20,10 @@ class SwiftCompatTest: XCTestCase {
         XCTAssertEqual(actual, expected)
     }
     
-//    func testSubpaths1() throws {
-//        let fm = FileManager.default
-//        func isDir(_ str: String) -> Bool {
-//            var y: ObjCBool = false
-//            return fm.fileExists(atPath: str, isDirectory: &y) && y.boolValue
-//        }
-//        let dir = URL.init(fileURLWithPath: "TestResources/globstar")
-//
-//        let subpaths = try fm.subpathsOfDirectoryCompat(atPath: dir.path)
-//        dump(subpaths)
-//
-//        let actual: [String] = subpaths
-//            .filter { isDir(dir.appendingPathComponent($0).path) }
-//            .sorted()
-//        dump(actual)
-//
-//        let expected = [
-//            "a",
-//            "a/b",
-//            "a/b/c"
-//        ]
-//        XCTAssertEqual(actual, expected)
-//    }
-//
-//    func testSubpaths2() throws {
-//        let fm = FileManager.default
-//
-//        let dir = URL.init(fileURLWithPath: "TestResources/globstar")
-//
-//        let subpaths = fm.enumerator(atPath: dir.path)!.map { $0 as! String }
-//        dump(subpaths)
-//    }
-    
     static var allTests: [(String, (SwiftCompatTest) -> () throws -> Void)] {
         return [
             ("testPathAppend1", testPathAppend1),
             ("testPathAppend2", testPathAppend2),
-//            ("testSubpaths1", testSubpaths1)
         ]
     }
 }

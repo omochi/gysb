@@ -3,7 +3,10 @@
 set -ue
 
 repo_dir="$(cd "$(dirname "$0")/.."; pwd)"
-cd "${repo_dir}/.."
+cd "${repo_dir}"
+
+mkdir swift_install
+cd "swift_install"
 
 swift_version="swift-DEVELOPMENT-SNAPSHOT-2017-11-09-a"
 swift_package_name="${swift_version}-ubuntu14.04"

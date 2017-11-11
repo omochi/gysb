@@ -13,7 +13,7 @@ public func expandGlobStar(pattern: String, in directory: URL?) throws -> [Strin
     let cdBack = directory.map { changeCurrentDirectory(path: $0) }
     defer { cdBack?() }
     
-    let patternParts: [String] = (pattern as NSString).pathComponents
+    let patternParts: [String] = NSString(string: pattern).pathComponents
     let globStarNum = patternParts.filter { $0 == "**" }.count
     if globStarNum >= 2 {
         throw Error(message: "globstar can be used at most one")
@@ -25,13 +25,13 @@ public func expandGlobStar(pattern: String, in directory: URL?) throws -> [Strin
     
     var leadPath = ""
     for i in 0..<globStarIndex {
-        leadPath = (leadPath as NSString).appendingPathComponent(patternParts[i])
+        leadPath = NSString(string: leadPath).appendingPathComponent(patternParts[i])
     }
     
     func appendTailPath(to path: String) -> String {
         var path = path
         for i in (globStarIndex + 1)..<patternParts.count {
-            path = (path as NSString).appendingPathComponent(patternParts[i])
+            path = NSString(string: path).appendingPathComponent(patternParts[i])
         }
         return path
     }
@@ -48,7 +48,7 @@ public func expandGlobStar(pattern: String, in directory: URL?) throws -> [Strin
     }
     
     let expandedPaths: [String] = substSubpathStrs
-        .map { (leadPath as NSString).appendingPathComponent($0) }
+        .map { NSString(string: leadPath).appendingPathComponent($0) }
         .filter { fm.isDirectory(atPath: $0) }
     
     for expandedPath in expandedPaths {
@@ -73,17 +73,24 @@ public func glob(pattern: String, in directory: URL?) throws -> [URL] {
     
     var patterns: [String] = [pattern]
     
-    let patternParts: [String] = (pattern as NSString).pathComponents
+    let patternParts: [String] = NSString(string: pattern).pathComponents
     if (patternParts.contains { $0 == "**" }) {
         patterns = try expandGlobStar(pattern: pattern, in: directory)
     }
     
     for ptn in patterns {
-        Darwin.glob(ptn.cString(using: .utf8),
-                    GLOB_TILDE | GLOB_MARK | GLOB_BRACE,
-                    nil, &obj)
-        for i in 0..<obj.gl_matchc {
-            retStrs.append(String.init(cString: obj.gl_pathv[Int(i)]!))
+        glob(ptn.cString(using: .utf8),
+             GLOB_TILDE | GLOB_MARK | GLOB_BRACE,
+             nil, &obj)
+        
+        #if os(Linux)
+            let n = Int(obj.gl_pathc)
+        #else
+            let n = Int(obj.gl_matchc)
+        #endif
+        
+        for i in 0..<n {
+            retStrs.append(String.init(cString: obj.gl_pathv[i]!))
         }
     }
     

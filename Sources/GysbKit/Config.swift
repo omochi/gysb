@@ -65,4 +65,21 @@ public extension Config {
         try config.updateIncludePaths()
         return config
     }
+    
+    public static func searchForSource(path: URL) -> URL? {
+        let fm = FileManager.default
+        
+        var dir = path.deletingLastPathComponent().absoluteURL
+        
+        while true {
+            let checkPath = dir.appendingPathComponent("gysb.json")
+            if fm.fileExists(atPath: checkPath.path) {
+                return checkPath
+            }
+            if dir.pathComponents.count == 1 {
+                return nil
+            }
+            dir.deleteLastPathComponent()
+        }
+    }
 }

@@ -168,7 +168,7 @@ public class Driver {
             let path = state.entries[i].path
             
             let source = try String.init(contentsOf: path, encoding: .utf8)
-            let configPath = searchConfigJSON(sourcePath: path)
+            let configPath = Config.searchForSource(path: path)
             
             state.entries[i].source = source
             state.entries[i].configPath = configPath
@@ -277,23 +277,6 @@ public class Driver {
     private func logPut(_ s: String) {
         if state.logPrintEnabled {
             print(s, terminator: "")
-        }
-    }
-    
-    private func searchConfigJSON(sourcePath: URL) -> URL? {
-        let fm = FileManager.default
-        
-        var dir = sourcePath.deletingLastPathComponent().absoluteURL
-        
-        while true {
-            let checkPath = dir.appendingPathComponent("gysb.json")
-            if fm.fileExists(atPath: checkPath.path) {
-                return checkPath
-            }
-            if dir.pathComponents.count == 1 {
-                return nil
-            }
-            dir.deleteLastPathComponent()
         }
     }
 

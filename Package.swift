@@ -16,10 +16,11 @@ let package = Package(
             targets: ["gysb"])
     ],
     dependencies: [
-        .package(url: "https://github.com/IBM-Swift/CommonCrypto.git", from: "0.1.5")
+        .package(url: "https://github.com/IBM-Swift/BlueCryptor.git", from: "0.8.21")
     ],
     targets: [
-        .target(name: "GysbBase"),
+        .target(name: "GysbBase",
+                dependencies: ["Cryptor"]),
         .target(name: "GysbMacroLib",
                 dependencies: ["GysbBase"]),
         .target(name: "GysbKit",

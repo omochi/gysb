@@ -31,6 +31,12 @@ class ParserTest: XCTestCase {
         }
     
     }
+    
+    static var allTests: [(String, (ParserTest) -> () throws -> Void)] {
+        return [
+            ("testErrorInfo", testErrorInfo)
+        ]
+    }
 
     
 }

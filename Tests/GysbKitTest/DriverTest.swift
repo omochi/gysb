@@ -134,4 +134,20 @@ class DriverTest: XCTestCase {
             XCTAssertEqual(actual, expected)
         }
     }
+    
+    static var allTests: [(String, (DriverTest) -> () throws -> Void)] {
+        return [
+            ("testSimple1", testSimple1),
+            ("testSimple1Write", testSimple1Write),
+            ("testSimple2", testSimple2),
+            ("testVector", testVector),
+            ("testVectorWrite", testVectorWrite),
+            ("testSimpleInclude", testSimpleInclude),
+            ("testSameNameInclude", testSameNameInclude),
+            ("testRecursiveInclude", testRecursiveInclude),
+            ("testYaml", testYaml),
+            ("testSharedConfig", testSharedConfig),
+            ("testMultipleConfigGroup", testMultipleConfigGroup)
+        ]
+    }
 }

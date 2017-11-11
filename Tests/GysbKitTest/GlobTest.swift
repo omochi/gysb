@@ -3,24 +3,36 @@ import GysbBase
 import GysbKit
 import Foundation
 class GlobTest: XCTestCase {
-    func testExpandGlobStar() throws {
+    func testNSStringPath1() throws {
+        let actual = NSString(string: "").appendingPathComponent("*.txt")
+        let expected = "*.txt"
+        XCTAssertEqual(actual, expected)
+    }
+    
+    func testExpandGlobStar1() throws {
         let testDir = URL.init(fileURLWithPath: "TestResources/globstar")
-        var actual = try expandGlobStar(pattern: "**/*.txt", in: testDir)
+        let actual = try expandGlobStar(pattern: "**/*.txt", in: testDir)
         XCTAssertEqual(actual, [
             "*.txt",
             "a/*.txt",
             "a/b/*.txt",
             "a/b/c/*.txt"
             ])
-        
-        actual = try expandGlobStar(pattern: "a/**/*.txt", in: testDir)
+    }
+    
+    func testExpandGlobStar2() throws {
+        let testDir = URL.init(fileURLWithPath: "TestResources/globstar")
+        let actual = try expandGlobStar(pattern: "a/**/*.txt", in: testDir)
         XCTAssertEqual(actual, [
             "a/*.txt",
             "a/b/*.txt",
             "a/b/c/*.txt"
             ])
-        
-        actual = try expandGlobStar(pattern: "b/**/*.txt", in: testDir)
+    }
+    
+    func testExpandGlobStar3() throws {
+        let testDir = URL.init(fileURLWithPath: "TestResources/globstar")
+        let actual = try expandGlobStar(pattern: "b/**/*.txt", in: testDir)
         XCTAssertEqual(actual, [
             "b/*.txt"
             ])
@@ -53,6 +65,16 @@ class GlobTest: XCTestCase {
             "a/b",
             "a/b/c"
             ])
+    }
+    
+    static var allTests: [(String, (GlobTest) -> () throws -> Void)] {
+        return [
+            ("testNSStringPath1", testNSStringPath1),
+            ("testExpandGlobStar1", testExpandGlobStar1),
+            ("testExpandGlobStar2", testExpandGlobStar2),
+            ("testExpandGlobStar3", testExpandGlobStar3),
+            ("testGlobStar", testGlobStar)
+        ]
     }
 }
 

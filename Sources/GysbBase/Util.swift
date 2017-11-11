@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import CommonCrypto
+import Cryptor
 
 public func escapeToSwiftLiteral(text: String) -> String {
     var s = text
@@ -34,11 +34,17 @@ public func cast<T, U>(_ t: T, to: U.Type) throws -> U {
 }
 
 public func resolvePath(_ path: URL, in directory: URL) -> URL {
-    if (path.relativePath as NSString).isAbsolutePath {
+    if NSString(string: path.relativePath).isAbsolutePath {
         return path
     }
     
     return directory.appendingPathComponent(path.relativePath)
+}
+
+public func getRandomUInt32() -> UInt32 {
+    var bytes: [UInt8] = try! Random.generate(byteCount: 4)
+    let p = UnsafeMutableRawPointer(&bytes).bindMemory(to: UInt32.self, capacity: 1)
+    return p.pointee
 }
 
 public func getRandomString(length: Int) -> String {
@@ -49,7 +55,7 @@ public func getRandomString(length: Int) -> String {
     
     var ret = ""
     for _ in 0..<length {
-        let dice = Int(arc4random_uniform(UInt32(chars.count)))
+        let dice = Int(getRandomUInt32() & UInt32(chars.count))
         let charIndex = chars.index(chars.startIndex, offsetBy: dice)
         ret.append(chars[charIndex])
     }
@@ -57,16 +63,13 @@ public func getRandomString(length: Int) -> String {
 }
 
 public func getSha256(string: String) -> String {
-    let bufLen: Int = Int(CC_SHA256_DIGEST_LENGTH)
-    let buf = UnsafeMutablePointer<UInt8>.allocate(capacity: bufLen)
-    defer { buf.deallocate(capacity: bufLen) }
+    let digest = Digest.init(using: .sha256)
+    let _ = digest.update(string: string)
+    let data = digest.final()
     
-    let data = Array(string.utf8)
-    CC_SHA256(data, CC_LONG(data.count), buf)
-
     var ret = ""
-    for i in 0..<bufLen {
-        let byte: UInt8 = buf[i]
+    for i in 0..<data.count {
+        let byte: UInt8 = data[i]
         ret.append(String.init(format: "%02x", byte))
     }
     return ret
@@ -98,10 +101,18 @@ public func changeCurrentDirectory(path: URL) -> () -> Void {
     }
 }
 
-public extension FileManager {
-    func isDirectory(atPath path: String) -> Bool {
+extension FileManager {
+    public func isDirectory(atPath path: String) -> Bool {
         var isDir: ObjCBool = false
         let path = URL.init(fileURLWithPath: path).path
         return fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue
+    }
+}
+
+extension NSLock {
+    public func scope<R>(_ f: () throws -> R) rethrows -> R {
+        lock()
+        defer { unlock() }
+        return try f()
     }
 }

@@ -54,4 +54,10 @@ class TokenReaderTest: XCTestCase {
         tk = tr.read()
         XCTAssertEqual(tk.description, "")
     }
+    
+    static var allTests: [(String, (TokenReaderTest) -> () throws -> Void)] {
+        return [
+            ("testTokenReader", testTokenReader)
+        ]
+    }
 }

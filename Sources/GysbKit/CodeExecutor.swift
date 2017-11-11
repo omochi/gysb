@@ -49,11 +49,11 @@ public class CodeExecutor {
                 let fileName = includeFile.lastPathComponent
                 
                 let destSuffix = getSha256(string: includeFile.path).slice(start: 0, len: 16)
-                let ext = (fileName as NSString).pathExtension
+                let ext = NSString(string: fileName).pathExtension
                 
-                var destFileName = (fileName as NSString).deletingPathExtension
+                var destFileName = NSString(string: fileName).deletingPathExtension
                 destFileName = destFileName + "_" + destSuffix
-                destFileName = (destFileName as NSString).appendingPathExtension(ext)!
+                destFileName = NSString(string: destFileName).appendingPathExtension(ext)!
                 
                 let destPath = targetDir.appendingPathComponent(destFileName)
                 

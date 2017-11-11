@@ -46,6 +46,35 @@ public struct ExecError : Swift.Error, CustomStringConvertible {
     }
 }
 
+public class Thread : Foundation.Thread {
+    public init(_ f: @escaping () -> Void) {
+        self.f = f
+    }
+    
+    public override func main() {
+        f?()
+        
+        cond.lock()
+        exited = true
+        cond.signal()
+        cond.unlock()
+        
+        f = nil
+    }
+    
+    public func join() {
+        cond.lock()
+        while !exited {
+            cond.wait()
+        }
+        cond.unlock()
+    }
+    
+    private var f: (() -> Void)? = nil
+    private var exited: Bool = false
+    private var cond: NSCondition = .init()
+}
+
 public func execRaw(path: URL,
                     arguments: [String],
                     stdout: @escaping (Data) -> Void,
@@ -53,14 +82,28 @@ public func execRaw(path: URL,
     throws -> Int32
 {
     let stdoutPipe = Pipe()
-    stdoutPipe.fileHandleForReading.readabilityHandler = { file in
-        stdout(file.availableData)
+    let stdoutThread = Thread {
+        while true {
+            let chunk = stdoutPipe.fileHandleForReading.availableData
+            if chunk.count == 0 {
+                break
+            }
+            stdout(chunk)
+        }
     }
-    
+    stdoutThread.start()
+
     let stderrPipe = Pipe()
-    stderrPipe.fileHandleForReading.readabilityHandler = { file in
-        stderr(file.availableData)
+    let stderrThread = Thread {
+        while true {
+            let chunk = stderrPipe.fileHandleForReading.availableData
+            if chunk.count == 0 {
+                break
+            }
+            stderr(chunk)
+        }
     }
+    stderrThread.start()
     
     let process = Process()
     process.launchPath = path.path
@@ -68,10 +111,11 @@ public func execRaw(path: URL,
     process.standardOutput = stdoutPipe
     process.standardError = stderrPipe
     process.launch()
+    
     process.waitUntilExit()
     
-    stdoutPipe.fileHandleForReading.readabilityHandler = nil
-    stderrPipe.fileHandleForReading.readabilityHandler = nil
+    stdoutThread.join()
+    stderrThread.join()
     
     return process.terminationStatus
 }
@@ -81,11 +125,16 @@ public func execCapture(path: URL,
                         arguments: [String]) throws -> String
 {
     var outputData = Data()
+    let lock = NSLock()
     
     let st = try execRaw(path: path,
                          arguments: arguments,
-                         stdout: { outputData.append($0) },
-                         stderr: { outputData.append($0) })
+                         stdout: { chunk in
+                            lock.scope {
+                                outputData.append(chunk) } },
+                         stderr: { chunk in
+                            lock.scope {
+                                outputData.append(chunk) } })
     
     let outputStr = decodeString(data: outputData, coding: .utf8)
     
@@ -113,17 +162,30 @@ public func execPrintOrCapture(path: URL,
 {
     let status: Int32
     var output: String?
-    
+    let lock = NSLock()
+
     if let print = print {
         status = try execRaw(path: path, arguments: arguments,
-                             stdout: { print(decodeString(data: $0, coding: .utf8)) },
-                             stderr: { print(decodeString(data: $0, coding: .utf8)) })
+                             stdout: { chunk in
+                                lock.scope {
+                                    print(decodeString(data: chunk, coding: .utf8))
+                                } },
+                             stderr: { chunk in
+                                lock.scope {
+                                    print(decodeString(data: chunk, coding: .utf8))
+                                } })
 
     } else {
         output = ""
         status = try execRaw(path: path, arguments: arguments,
-                             stdout: { output!.append(decodeString(data: $0, coding: .utf8)) },
-                             stderr: { output!.append(decodeString(data: $0, coding: .utf8)) })
+                             stdout: { chunk in
+                                lock.scope {
+                                    output!.append(decodeString(data: chunk, coding: .utf8))
+                                } },
+                             stderr: { chunk in
+                                lock.scope {
+                                    output!.append(decodeString(data: chunk, coding: .utf8))
+                                } })
 
     }
     

@@ -5,6 +5,8 @@
 //  Created by omochimetaru on 2017/11/08.
 //
 
+import Foundation
+
 extension String {
     public func getOrNone(_ index: String.Index) -> Character? {
         if index == endIndex {
@@ -40,3 +42,11 @@ extension Sequence {
         return false
     }
 }
+
+#if os(Linux)
+extension ObjCBool {
+    public var boolValue: Bool {
+        return self == true
+    }
+}
+#endif

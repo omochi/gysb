@@ -2,7 +2,7 @@
 
 set -ue
 
-repo_dir="$(cd "$(dirname "$0")/.."; pwd)"
+repo_dir="$(pwd)"
 cd "${repo_dir}"
 
 echo "@@@@ pwd"

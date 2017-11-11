@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/omochi/gysb.svg?branch=master)](https://travis-ci.org/omochi/gysb)
+
 # gysb
 
 gysb is Generate Your Swifty Boilerplate.

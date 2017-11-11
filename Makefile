@@ -10,7 +10,7 @@ xcode:
 	swift pakcage generate-xcodeproj
 
 archive:
-	swift build -Xswiftc -static-stdlib
+	swift build --disable-sandbox -Xswiftc -static-stdlib
 
 install: archive
 	mkdir -p "$(PREFIX)/bin"

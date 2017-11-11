@@ -86,7 +86,15 @@ gysb command search `gysb.json` for each gysb template files within same or ance
 
 There are some install approachs.
 
-1. build yourself and set path
+1. install from homebrew
+
+## homebrew
+
+```
+$ brew install omochi/taps/gysb
+```
+
+2. build yourself and set path
 
 ## build yourself
 

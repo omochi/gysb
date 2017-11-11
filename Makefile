@@ -14,5 +14,5 @@ archive:
 
 install: archive
 	mkdir -p "$(PREFIX)/bin"
-	ln -sf "$(CURDIR)/.build/debug/gysb" "$(PREFIX)/bin/gysb"
+	cp ".build/debug/gysb" "$(PREFIX)/bin/gysb"
 

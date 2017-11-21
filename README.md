@@ -30,7 +30,7 @@ y is less than or equal to seven
 % }
 
 The End.
-$ swift run gysb TestResources/simple1/a.txt.gysb 
+$ swift run gysb Examples/simple1/a.txt.gysb 
 Hello 100%
 
 I can assure you that 42 < 43

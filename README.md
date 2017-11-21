@@ -68,7 +68,7 @@ Usage: .build/x86_64-apple-macosx10.10/debug/gysb [mode] path
 
 - `%%`: escaped `%`
 - `$$`: escaped `$`
-- `%{` code `%}`: code block
+- `%{` code `}%`: code block
 - `% code`: code line
 - `${` code `}`: code substitution
 

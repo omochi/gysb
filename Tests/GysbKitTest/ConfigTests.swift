@@ -18,7 +18,7 @@ class ConfigTests: XCTestCase {
         XCTAssertEqual(actual?.path, expected.path)
     }
 
-    static var allTests: [(String, (ConfigTest) -> () throws -> Void)] {
+    static var allTests: [(String, (ConfigTests) -> () throws -> Void)] {
         return [
             ("testSearch1", testSearch1)
         ]

@@ -7,7 +7,7 @@
 
 import XCTest
 import Foundation
-class SwiftCompatTest: XCTestCase {
+class SwiftCompatTests: XCTestCase {
     func testPathAppend1() throws {
         let actual = NSString(string: "").appendingPathComponentCompat("*.txt")
         let expected = "*.txt"
@@ -20,7 +20,7 @@ class SwiftCompatTest: XCTestCase {
         XCTAssertEqual(actual, expected)
     }
     
-    static var allTests: [(String, (SwiftCompatTest) -> () throws -> Void)] {
+    static var allTests: [(String, (SwiftCompatTests) -> () throws -> Void)] {
         return [
             ("testPathAppend1", testPathAppend1),
             ("testPathAppend2", testPathAppend2),

@@ -1,7 +1,7 @@
 import XCTest
 import GysbKit
 import Foundation
-class DriverTest: XCTestCase {
+class DriverTests: XCTestCase {
     func testSimple1() throws {
         let testDir = URL.init(fileURLWithPath: "Examples/simple1")
         let driver = Driver.init(path: testDir.appendingPathComponent("a.txt.gysb"))
@@ -135,7 +135,7 @@ class DriverTest: XCTestCase {
         }
     }
     
-    static var allTests: [(String, (DriverTest) -> () throws -> Void)] {
+    static var allTests: [(String, (DriverTests) -> () throws -> Void)] {
         return [
             ("testSimple1", testSimple1),
             ("testSimple1Write", testSimple1Write),

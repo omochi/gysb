@@ -8,7 +8,7 @@
 import XCTest
 import GysbKit
 
-class ParserTest: XCTestCase {
+class ParserTests: XCTestCase {
     func testErrorInfo() {
         let source = [
             "one is",
@@ -32,7 +32,7 @@ class ParserTest: XCTestCase {
     
     }
     
-    static var allTests: [(String, (ParserTest) -> () throws -> Void)] {
+    static var allTests: [(String, (ParserTests) -> () throws -> Void)] {
         return [
             ("testErrorInfo", testErrorInfo)
         ]

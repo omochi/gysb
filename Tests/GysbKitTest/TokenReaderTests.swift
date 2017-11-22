@@ -1,7 +1,7 @@
 import XCTest
 import GysbKit
 import Foundation
-class TokenReaderTest: XCTestCase {
+class TokenReaderTests: XCTestCase {
     func testTokenReader() {
         let source = [
             "abc",
@@ -55,7 +55,7 @@ class TokenReaderTest: XCTestCase {
         XCTAssertEqual(tk.description, "")
     }
     
-    static var allTests: [(String, (TokenReaderTest) -> () throws -> Void)] {
+    static var allTests: [(String, (TokenReaderTests) -> () throws -> Void)] {
         return [
             ("testTokenReader", testTokenReader)
         ]

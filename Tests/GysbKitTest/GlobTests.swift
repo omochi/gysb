@@ -2,7 +2,7 @@ import XCTest
 import GysbBase
 import GysbKit
 import Foundation
-class GlobTest: XCTestCase {
+class GlobTests: XCTestCase {
     func testExpandGlobStar1() throws {
         let testDir = URL.init(fileURLWithPath: "TestResources/globstar")
         let actual = try expandGlobStar(pattern: "**/*.txt", in: testDir)
@@ -70,7 +70,7 @@ class GlobTest: XCTestCase {
             ])
     }
     
-    static var allTests: [(String, (GlobTest) -> () throws -> Void)] {
+    static var allTests: [(String, (GlobTests) -> () throws -> Void)] {
         return [
             ("testExpandGlobStar1", testExpandGlobStar1),
             ("testExpandGlobStar2", testExpandGlobStar2),

@@ -44,7 +44,7 @@ The End.
 
 ## other examples
 
-See `Test` and `TestResources`.
+See `Examples` and `Tests`.
 
 # docs
 
@@ -79,8 +79,8 @@ gysb command search `gysb.json` for each gysb template files within same or ance
 
 ## gysb.json features
 
-- local library script inclusion. See example in `TestExample/simple_include`.
-- external library via SwiftPM package. See example in `TestExample/yaml`.
+- local library script inclusion. See example in `Examples/simple_include`.
+- external library via SwiftPM package. See example in `Examples/yaml`.
 
 # install
 

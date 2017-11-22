@@ -9,7 +9,7 @@ import XCTest
 import Foundation
 import GysbKit
 
-class ConfigTest: XCTestCase {
+class ConfigTests: XCTestCase {
     
     func testSearch1() {
         let source = URL.init(fileURLWithPath: "Examples/simple_include/include.swift.gysb")

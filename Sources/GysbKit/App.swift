@@ -12,14 +12,12 @@ public class App {
     public enum Mode {
         case help
         case parse
-        case macro
         case compile
         case render
         
         public func toDriverStage() -> Driver.Stage {
             switch self {
             case .parse: return .parse
-            case .macro: return .macro
             case .compile: return .compile
             case .render: return .render
             case .help:
@@ -81,8 +79,6 @@ public class App {
                 mode = .help
             case "--parse":
                 mode = .parse
-            case "--macro":
-                mode = .macro
             case "--compile":
                 mode = .compile
             case "--render":
@@ -107,12 +103,12 @@ public class App {
             }
         }
         
-        option.stage = mode!.toDriverStage()
-        
         if mode == .help {
             return .help
         }
         
+        option.stage = mode!.toDriverStage()
+
         if index >= args.count {
             throw DriverError.invalidOption("path not specified")
         }
@@ -131,7 +127,6 @@ public class App {
         # mode
             --help: print help
             --parse: print AST
-            --macro: print macro evaluated AST
             --compile: print compiled Swift
             --render: render template (default)
         

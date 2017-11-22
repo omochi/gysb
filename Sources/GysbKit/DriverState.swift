@@ -10,7 +10,7 @@ import Foundation
 extension Driver.State {
     public func resultString(index: Int, stage: Driver.Stage) -> String {
         switch stage {
-        case .parse, .macro:
+        case .parse:
             return entries[index].template!.print()
         case .compile:
             return entries[index].code!

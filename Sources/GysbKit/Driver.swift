@@ -55,7 +55,6 @@ public class Driver {
     
     public enum Stage {
         case parse
-        case macro
         case compile
         case render
     }
@@ -139,12 +138,7 @@ public class Driver {
         if state.option.stage == .parse {
             return
         }
-        
-        try processMacroStage()
-        if state.option.stage == .macro {
-            return
-        }
-        
+
         try processCompileStage()
         if state.option.stage == .compile {
             return
@@ -181,12 +175,6 @@ public class Driver {
             let template = try Parser.init(source: source, path: path).parse()
             state.entries[i].template = template
             state.entries[i].source = nil
-        }
-    }
-    
-    private func processMacroStage() throws {
-        for i in 0..<state.entries.count {
-            try MacroProcessor.init(state: state, index: i).execute()
         }
     }
     

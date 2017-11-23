@@ -54,23 +54,27 @@ See `Examples` and `Tests`.
 
 ```
 $ swift run gysb --help
-Usage: .build/x86_64-apple-macosx10.10/debug/gysb [mode] path
+Usage: .build/x86_64-apple-macosx10.10/debug/gysb [mode] [flags] paths...
 
 # mode
     --help: print help
     --parse: print AST
-    --macro: print macro evaluated AST
     --compile: print compiled Swift
-    --render: render template
+    --render: render template (default)
+
+# flags
+    --write: write output on same directory (extension removed)
+    --source-dirs: paths means directory and search *.gysb (automatically enable `--write`)
+
 ```
 
 # syntax
 
 - `%%`: escaped `%`
 - `$$`: escaped `$`
-- `%{` code `}%`: code block
-- `% code`: code line
-- `${` code `}`: code substitution
+- `%{ <swift-code> }%`: code block
+- `% <swift-code> <newline>`: code line
+- `${ <swift-code> }`: code substitution
 
 # gysb.json
 
@@ -87,14 +91,13 @@ gysb command search `gysb.json` for each gysb template files within same or ance
 There are some install approachs.
 
 1. install from homebrew
+2. build yourself and set path
 
 ## homebrew
 
 ```
 $ brew install omochi/taps/gysb
 ```
-
-2. build yourself and set path
 
 ## build yourself
 

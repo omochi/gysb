@@ -48,7 +48,8 @@ See `Examples` and `Tests`.
 
 # docs
 
-[紹介記事](https://qiita.com/omochimetaru/items/422ddd04e95c55dd3833)
+- [紹介記事](https://qiita.com/omochimetaru/items/422ddd04e95c55dd3833)
+- [プレゼン](https://speakerdeck.com/omochi/metapuroguraminguxiang-kefalsetenpuretoenzin-gysb-wozuo-tuta)
 
 # command line help
 
